@@ -17,7 +17,6 @@ int main() {
     Item in_item;
     while (cin >> in_item.key >> in_item.value)
         in_arr.push_back(in_item);
-    cout<<endl;
 
     uint16_t max_key = UINT16_MIN, min_key = UINT16_MAX;
     for(int i = 0; i < in_arr.size(); i++) {
@@ -26,7 +25,9 @@ int main() {
     }
     
     uint32_t count_arr_size = max_key - min_key + 1;
-    uint16_t count_arr[count_arr_size] = {0};
+    uint16_t count_arr[count_arr_size];
+    for(int i = 0; i < count_arr_size; i++)
+        count_arr[i] = 0;
 
     for(int i = 0; i < in_arr.size(); i++)
         count_arr[in_arr[i].key - min_key] ++;
@@ -45,7 +46,6 @@ int main() {
 
     for(int i = 0; i < in_arr.size(); i++)
         cout << out_arr[i].key << '\t' << out_arr[i].value << endl;
-    cout << endl;
 
     return 0;
 }
