@@ -16,19 +16,25 @@ int main() {
     std::vector <Item> in_arr;
     Item in_item;
     while (std::cin >> in_item.key >> in_item.value)
-        in_arr.push_back(in_item);
+        in_arr.emplace_back(in_item);
     
-    std::vector <uint32_t> count_arr(UINT16_MAX + 1, 0);
+    uint16_t max_key = 0, min_key = UINT16_MAX;
+    for(int i = 0; i < in_arr.size(); ++i) {
+        min_key = (in_arr[i].key < min_key) ? in_arr[i].key : min_key;
+        max_key = (in_arr[i].key > max_key) ? in_arr[i].key : max_key;
+    }
+    std::cout << min_key << ' ' << max_key << std::endl;
+    std::vector <uint32_t> count_arr(max_key - min_key + 1, 0);
 
     for(int i = 0; i < in_arr.size(); ++i)
-        count_arr[in_arr[i].key] ++;
+        count_arr[in_arr[i].key - min_key] ++;
 
-    for(int i = 1; i < UINT16_MAX + 1; ++i)
+    for(int i = 1; i < max_key - min_key + 1; ++i)
         count_arr[i] += count_arr[i - 1];
 
     std::vector <Item*> out_arr (in_arr.size(), 0);
     for(int i = in_arr.size() - 1; i >= 0; --i)
-        out_arr[--count_arr[in_arr[i].key]] = &in_arr[i];
+        out_arr[--count_arr[in_arr[i].key - min_key]] = &in_arr[i];
 
     for(int i = 0; i < in_arr.size(); ++i)
         std::cout << out_arr[i]->key << '\t' << out_arr[i]->value << std::endl;
