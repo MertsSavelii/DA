@@ -34,7 +34,7 @@ int main(void) {
     for (int i = in_arr.size() - 1; i >= 0; --i)
         out_arr[--count[in_arr[i].key]] = &in_arr[i];
     chrono::system_clock::time_point end = chrono::system_clock::now();
-    for (int i = 0; i < in_arr.size(); i++)
-        cout << out_arr[i]->key << '\t' << out_arr[i]->value << '\n';
-    cout << duration_cast<chrono::milliseconds>(end - start).count() << "\n";
+    // for (int i = 0; i < in_arr.size(); i++)
+    //     cout << out_arr[i]->key << '\t' << out_arr[i]->value << '\n';
+    cout << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "\n";
 }
