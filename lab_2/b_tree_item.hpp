@@ -12,9 +12,9 @@ class BTreeItem {
         bool Empty();
         BTreeItem & operator = (const BTreeItem& it);
         ~BTreeItem();
-    private:
-        char Key[MAX_KEY_SIZE + 1];
+
         uint16_t KeySize;
+        char Key[MAX_KEY_SIZE + 1];
         uint64_t Value;
 };
 
