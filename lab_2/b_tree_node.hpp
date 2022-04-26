@@ -13,11 +13,13 @@ class BTreeNode {
         BTreeNode();
         std::vector<BTreeItem*> Data;
         std::vector<BTreeNode*> Child;
+        bool Leaf;
         ~BTreeNode();
 
         void PushNodeInFile(BTreeNode* curr, FILE* file);
         BTreeNode* PullNodeFromFile(FILE* file);
         BTreeNode* FindNode(BTreeNode* root, uint8_t* pos, const BTreeItem* Pattern);
+        BTreeNode* SplitNode();
         void InsertNotFull();
         void Erase();
 };
@@ -25,11 +27,28 @@ class BTreeNode {
 BTreeNode::BTreeNode() {
     Data.resize(1, nullptr);
     Child.resize(2, nullptr);
+    Leaf = true;
 }
 
 BTreeNode::~BTreeNode() {
     for (uint64_t i = 0; i < Child.size(); ++i)
         delete Child[i];
+}
+
+BTreeNode* BTreeNode::SplitNode() {
+    BTreeNode* newNode = new BTreeNode;
+    newNode->Data[0] = Data[TREE_DEGREE - 1];
+    for (uint8_t i = 0; i < TREE_DEGREE - 1; ++i) {
+        newNode->Child[0]->Data[i] = Data[i];
+        newNode->Child[0]->Child[i] = Child[i];
+        newNode->Child[1]->Data[i] = Data[TREE_DEGREE + i];
+        newNode->Child[1]->Child[i] = Child[TREE_DEGREE + i];
+    }
+    for (uint8_t i = 0; i < 2 * TREE_DEGREE; ++i) {
+        Child[i] = nullptr;
+    }
+    delete this;// хз сработает ли но должно, если что просто добавить входным аргументом ноду которую сплитуем
+    return newNode;
 }
 
 void  BTreeNode::PushNodeInFile(BTreeNode* curr, FILE* file) {

@@ -9,49 +9,48 @@ class BTree {
 public:
     BTree();
     ~BTree();
-    void Insert();
+    void Insert(BTreeItem* elem);
     void Erase();
     BTreeNode* Search();
     void Save();
     void Load();
 
 private:
-    BTreeNode* root;
+    BTreeNode* Root;
 
     //for Insert
     bool RootIsFull();
     void SplitRoot();
-    bool CanInsertInRoot();
     void InsertToRoot();
-    void SearchChildToInsert();
-    bool ChildIsFull();
-    void SplitChild();
-    void InsertToChild(); 
+    void InsertToChild(BTreeItem* elem); 
 };
 
 bool BTree::RootIsFull() {
-    return root->Data.size() == 2 * TREE_DEGREE - 1 ? true : false;
+    return Root->Data.size() == 2 * TREE_DEGREE - 1 ? true : false;
 }
 
 void BTree::SplitRoot() {
-    BTreeNode* newRoot;
-    
+    Root = Root->SplitNode();
 }
 
-void BTree::Insert() {
+void BTree::InsertToRoot() {
+    // нужен метод ноды бинпоиска индекса куда вставлять
+
+}
+
+
+void BTree::Insert(BTreeItem* elem) {
+    if(Root == nullptr) {
+        Root = new BTreeNode;
+        Root->Data[0] = elem;
+    }
     if(RootIsFull()) {
         SplitRoot();
+    }
+    if(Root->Leaf) {
+        InsertToRoot();
     } else {
-        if(CanInsertInRoot()) {
-            InsertToRoot();
-        } else {
-            SearchChildToInsert();
-            if(ChildIsFull()) {
-                SplitChild();
-            } else {
-                InsertToChild();
-            }
-        }
+        InsertToChild(elem);
     }
 }
 
