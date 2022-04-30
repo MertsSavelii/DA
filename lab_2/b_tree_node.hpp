@@ -6,35 +6,62 @@
 #include <vector>
 #include "b_tree_item.hpp"
 
-const uint16_t TREE_DEGREE = 12;
+const uint8_t TREE_DEGREE = 12;
 
 class BTreeNode {
-    public:
-        BTreeNode();
-        std::vector<BTreeItem*> Data;
-        std::vector<BTreeNode*> Child;
-        bool Leaf;
-        ~BTreeNode();
+public:
+    BTreeNode();
+    std::vector<BTreeItem> Data;
+    std::vector<BTreeNode*> Child;
+    ~BTreeNode();
 
-        void PushNodeInFile(BTreeNode* curr, FILE* file);
-        BTreeNode* PullNodeFromFile(FILE* file);
-        BTreeNode* FindNode(BTreeNode* root, uint8_t* pos, const BTreeItem* Pattern);
-        BTreeNode* SplitNode();
-        void InsertNotFull();
-        void Erase();
+    bool FindKey(std::string Key);
+
+    void InsertToNode(BTreeItem& elem);
+
+    // for InsertToNode
+    BTreeNode* SplitNode();
+    bool NodeIsLeaf();
+    bool NodeIsFull();
+    uint8_t BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem);
+    void BalancingChild(uint8_t ChildIndex);
 };
 
 BTreeNode::BTreeNode() {
-    Data.resize(1, nullptr);
+    Data.resize(1);
     Child.resize(2, nullptr);
-    Leaf = true;
 }
 
 BTreeNode::~BTreeNode() {
-    for (uint64_t i = 0; i < Child.size(); ++i)
+    for (uint8_t i = 0; i < Child.size(); ++i)
         delete Child[i];
 }
 
+// FindNode
+bool BTreeNode::FindKey(std::string Key) {
+    for (int i = 0; i < Data.size(); ++i) {
+        if (Key == Data[i].Key) {
+            return true;
+        }
+    }
+    if (!NodeIsLeaf()) {
+        if (Key < Data[0].Key) {
+            return Child[0]->FindKey(Key);
+        }
+        if (Key < Data[Data.size()].Key) {
+            return Child[Child.size()]->FindKey(Key);
+        }
+        for (int i = 0; i < Data.size() - 1; ++i) {
+            if (Key > Data[i].Key && Key < Data[i + 1].Key) {
+                return Child[i + 1]->FindKey(Key);
+            }
+        }
+    } else {
+        return false;
+    }
+}
+
+// InsertToNode
 BTreeNode* BTreeNode::SplitNode() {
     BTreeNode* newNode = new BTreeNode;
     newNode->Data[0] = Data[TREE_DEGREE - 1];
@@ -47,79 +74,61 @@ BTreeNode* BTreeNode::SplitNode() {
     for (uint8_t i = 0; i < 2 * TREE_DEGREE; ++i) {
         Child[i] = nullptr;
     }
-    delete this;// хз сработает ли но должно, если что просто добавить входным аргументом ноду которую сплитуем
+    delete this;// хз сработает ли, но должно, если что просто добавить входным аргументом ноду которую сплитуем
     return newNode;
 }
 
-void  BTreeNode::PushNodeInFile(BTreeNode* curr, FILE* file) {
-    uint8_t size = 0;
-    if (curr == nullptr) {
-        fwrite(&size, sizeof(uint8_t), 1, file);
+bool BTreeNode::NodeIsLeaf() {
+    for (int i = 0; i < Child.size(); ++i)
+        if (Child[i] != nullptr)
+            return false;
+    return true;
+}
+
+bool BTreeNode::NodeIsFull() {
+    return (Data.size() == 2 * TREE_DEGREE - 1) ? true : false;
+}
+
+uint8_t BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem) {
+    uint8_t left = -1;
+    uint8_t right = Data.size();
+    while (left + 1 < right) {
+        uint8_t mid = (left + right) / 2;
+        if (Data[mid] < elem) {
+            left = mid;
+        }
+        else {
+            right = mid;
+        }
+    }
+    return right;
+}
+
+void BTreeNode::BalancingChild(uint8_t ChildIndex) {
+    BTreeNode* SplitNode = Child[ChildIndex]->SplitNode();
+    Data.insert(Data.begin() + ChildIndex, SplitNode->Data[0]);
+    Child[ChildIndex] = SplitNode->Child[1];
+    Child.insert(Child.begin() + ChildIndex, SplitNode->Child[0]);
+    SplitNode->Child[0] = nullptr;
+    SplitNode->Child[1] = nullptr;
+    delete SplitNode;
+}
+
+void BTreeNode::InsertToNode(BTreeItem& elem) {
+    uint8_t index = BinarySearch(Data, elem);
+
+    if (NodeIsLeaf()) {
+        Data.insert(Data.begin() + index, elem);
+        Child.insert(Child.begin() + index, nullptr);
     } else {
-        size = curr->Data.size();
-        fwrite(&size, sizeof(uint8_t), 1, file);
-        for (uint8_t i = 0; i < curr->Data.size(); ++i) {
-            fwrite(&curr->Data[i]->KeySize, sizeof(uint16_t), 1, file);
-            fwrite(&curr->Data[i]->Key, sizeof(char), MAX_KEY_SIZE + 1, file);
-            fwrite(&curr->Data[i]->Value, sizeof(uint64_t), 1, file);
-        }
-        for (uint8_t i = 0; i < curr->Child.size(); ++i) {
-            PushNodeInFile(curr->Child[i], file);
+        if (Child[index]->NodeIsFull()) {
+            BalancingChild(index);
+        } else {
+            Child[index]->InsertToNode(elem);
         }
     }
 }
 
-BTreeNode*  BTreeNode::PullNodeFromFile(FILE* file) {
-    uint8_t size = 0;
-    fread(&size, sizeof(uint8_t), 1, file);
-    if (size == 0) {
-        return nullptr;
-    } else {
-        BTreeNode* curr = new BTreeNode;
-        curr->Data.resize(size);
-        curr->Child.resize(size + 1);
-        for (uint8_t i = 0; i < curr->Data.size(); ++i) {
-            fread(&curr->Data[i]->KeySize, sizeof(uint16_t), 1, file);
-            fread(&curr->Data[i]->Key, sizeof(char), MAX_KEY_SIZE + 1, file);
-            fread(&curr->Data[i]->Value, sizeof(uint64_t), 1, file);
-        }
-        for (uint8_t i = 0; i < curr->Child.size(); ++i) {
-            curr->Child[i] = PullNodeFromFile(file);
-        }
-        return curr;
-    }
-}
 
-BTreeNode* BTreeNode::FindNode(BTreeNode* root, uint8_t* pos, const BTreeItem* Pattern) {
-    for(*pos = 0; *pos < root->Data.size(); ++*pos) {
-        if (Pattern->Key == root->Data[*pos]->Key) {
-            return root;
-        }
-    }
-    if (Pattern->Key == root->Data[0]->Key) {
-        return FindNode(root->Child[0], pos, Pattern);
-    }
-    if (Pattern->Key == root->Data[root->Data.size() - 1]->Key) {
-        return FindNode(root->Child[root->Data.size() - 1], pos, Pattern);
-    }
-    for(*pos = 0; *pos < root->Data.size() - 1; ++*pos) {
-        if (Pattern->Key > root->Data[*pos]->Key && 
-            Pattern->Key < root->Data[*pos + 1]->Key) {
-            return FindNode(root->Child[*pos + 1], pos, Pattern);
-        }
-    }
-    // if (Key == DataI.key) return DataI;
-    // if (Key < Data0.key) return Find(Child0, Key);
-    // if (Key > DataLast.key) return Find(ChildLast, Key);
-    // if (Key > DataI.key && Key < DataI+1.key) return Find(ChildI+1, Key);
-}
-
-void BTreeNode::InsertNotFull() {
-    
-}
-
-void BTreeNode::Erase() {
-
-}
 
 #endif /* B_TREE_NODE_HPP */

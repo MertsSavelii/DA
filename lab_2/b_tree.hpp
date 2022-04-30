@@ -9,60 +9,44 @@ class BTree {
 public:
     BTree();
     ~BTree();
-    void Insert(BTreeItem* elem);
-    void Erase();
-    BTreeNode* Search();
+    bool Search(std::string Key);
+    void Insert(BTreeItem& elem);
+    void Erase(BTreeItem& elem);
     void Save();
     void Load();
 
 private:
     BTreeNode* Root;
-
-    //for Insert
-    bool RootIsFull();
-    void SplitRoot();
-    void InsertToRoot();
-    void InsertToChild(BTreeItem* elem); 
 };
 
-bool BTree::RootIsFull() {
-    return Root->Data.size() == 2 * TREE_DEGREE - 1 ? true : false;
+BTree::BTree() {
+    Root = nullptr;
 }
 
-void BTree::SplitRoot() {
-    Root = Root->SplitNode();
+BTree::~BTree() {
+    delete Root;
 }
 
-void BTree::InsertToRoot() {
-    // нужен метод ноды бинпоиска индекса куда вставлять
-
+bool BTree::Search(std::string Key) {
+    return Root->FindKey(Key);
 }
 
-
-void BTree::Insert(BTreeItem* elem) {
+void BTree::Insert(BTreeItem& elem) {
     if(Root == nullptr) {
         Root = new BTreeNode;
         Root->Data[0] = elem;
-    }
-    if(RootIsFull()) {
-        SplitRoot();
-    }
-    if(Root->Leaf) {
-        InsertToRoot();
+        Root->Child[0] = nullptr;
+        Root->Child[1] = nullptr;
     } else {
-        InsertToChild(elem);
+        if(Root->NodeIsFull()) {
+            Root = Root->SplitNode();
+        }
+        Root->InsertToNode(elem);
     }
 }
 
-void BTree::Erase() {
+void BTree::Erase(BTreeItem& elem) {
 
-}
-
-BTreeNode* BTree::Search() {
-    // if (Key == DataI.key) return DataI;
-    // if (Key < Data0.key) return Find(Child0, Key);
-    // if (Key > DataLast.key) return Find(ChildLast, Key);
-    // if (Key > DataI.key && Key < DataI+1.key) return Find(ChildI+1, Key);
 }
 
 #endif /* B_TREE_HPP*/
