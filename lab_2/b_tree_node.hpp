@@ -17,19 +17,19 @@ public:
 
     bool FindKey(std::string Key);
 
-    void InsertToNode(BTreeItem& elem);
-
     // for InsertToNode
     BTreeNode* SplitNode();
     bool NodeIsLeaf();
     bool NodeIsFull();
     uint8_t BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem);
     void BalancingChild(uint8_t ChildIndex);
+
+    void InsertToNode(BTreeItem& elem);
 };
 
 BTreeNode::BTreeNode() {
     Data.resize(1);
-    Child.resize(2, nullptr);
+    Child.resize(2);
 }
 
 BTreeNode::~BTreeNode() {
@@ -56,9 +56,8 @@ bool BTreeNode::FindKey(std::string Key) {
                 return Child[i + 1]->FindKey(Key);
             }
         }
-    } else {
-        return false;
-    }
+    } 
+    return false;
 }
 
 // InsertToNode
@@ -89,7 +88,7 @@ bool BTreeNode::NodeIsFull() {
     return (Data.size() == 2 * TREE_DEGREE - 1) ? true : false;
 }
 
-uint8_t BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem) {
+uint8_t BTreeNode::BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem) {
     uint8_t left = -1;
     uint8_t right = Data.size();
     while (left + 1 < right) {

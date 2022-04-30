@@ -3,8 +3,6 @@
 
 #include "b_tree_node.hpp"
 
-const uint16_t TREE_DEGREE = 12;
-
 class BTree {
 public:
     BTree();
