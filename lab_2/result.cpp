@@ -1,10 +1,27 @@
-#ifndef B_TREE_NODE_HPP
-#define B_TREE_NODE_HPP
-
 #include <stdint.h>
 #include <stdio.h>
 #include <vector>
-#include "b_tree_item.hpp"
+#include <stdint.h>
+#include <string>
+
+const uint16_t MAX_KEY_SIZE = 256;
+
+class BTreeItem {
+public:
+    BTreeItem() {
+        Key.resize(MAX_KEY_SIZE + 1);
+        Value = 0;
+    }
+    ~BTreeItem(){}
+
+    std::string Key;
+    uint64_t Value;
+    friend bool operator<(const BTreeItem& A, const BTreeItem& B);
+};
+
+bool operator<(const BTreeItem& A, const BTreeItem& B) {
+    return (A.Key.compare(B.Key) == -1) ? true : false;
+}
 
 const uint8_t TREE_DEGREE = 2;
 
@@ -47,10 +64,10 @@ bool BTreeNode::FindKey(std::string Key) {
     if (Key < Data[0].Key && Child[0] != nullptr) {
         return Child[0]->FindKey(Key);
     }
-    if (Key < Data[Data.size() - 1].Key && Child[Child.size() - 1] != nullptr) {
+    if (Key > Data[Data.size() - 1].Key && Child[Child.size() - 1] != nullptr) {
         return Child[Child.size() - 1]->FindKey(Key);
     }
-    for (int i = 0; i < Data.size(); ++i) {
+    for (int i = 0; i < Data.size() - 1; ++i) {
         if (Key > Data[i].Key && Key < Data[i + 1].Key && Child[i + 1] != nullptr) {
             return Child[i + 1]->FindKey(Key);
         }
@@ -73,7 +90,7 @@ BTreeNode* BTreeNode::SplitNode() {
     for (uint8_t i = 0; i < 2 * TREE_DEGREE; ++i) {
         Child[i] = nullptr;
     }
-    delete this;// хз сработает ли, но должно, если что просто добавить входным аргументом ноду которую сплитуем
+    delete this;// надо удалить в береве хотя хз
     return newNode;
 }
 
@@ -89,11 +106,11 @@ bool BTreeNode::NodeIsFull() {
 }
 
 uint8_t BTreeNode::BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem) {
-    uint8_t left = -1;
+    int16_t left = -1;
     uint8_t right = Data.size();
     while (left + 1 < right) {
         uint8_t mid = (left + right) / 2;
-        if (Data[mid] < elem) {
+        if (Data[mid].Key < elem.Key) {
             left = mid;
         }
         else {
@@ -128,6 +145,100 @@ void BTreeNode::InsertToNode(BTreeItem& elem) {
     }
 }
 
+class BTree {
+public:
+    BTree();
+    ~BTree();
+    bool Search(std::string Key);
+    void Insert(BTreeItem& elem);
+    void Erase(BTreeItem& elem);
+    void Save();
+    void Load();
 
 
-#endif /* B_TREE_NODE_HPP */
+    BTreeNode* Root;
+};
+
+BTree::BTree() {
+    Root = nullptr;
+}
+
+BTree::~BTree() {
+    delete Root;
+}
+
+bool BTree::Search(std::string Key) {
+    return Root->FindKey(Key);
+}
+
+void BTree::Insert(BTreeItem& elem) {
+    if(Root == nullptr) {
+        Root = new BTreeNode;
+        Root->Data[0] = elem;
+        Root->Child[0] = nullptr;
+        Root->Child[1] = nullptr;
+    } else {
+        if(Root->NodeIsFull()) {
+            Root = Root->SplitNode();
+        }
+        Root->InsertToNode(elem);
+    }
+}
+
+void BTree::Erase(BTreeItem& elem) {
+    
+}
+
+int main() {
+    BTree tree;
+    BTreeItem item;
+    item.Key = "d";
+    item.Value = 50;
+    tree.Insert(item);
+    if (tree.Search("d")) {
+        printf("d passed");
+    }
+    item.Key = "c";
+    item.Value = 30;
+    tree.Insert(item);
+    if (tree.Search("c")) {
+        printf("c passed");
+    }
+    item.Key = "e";
+    item.Value = 40;
+    tree.Insert(item);
+    if (tree.Search("e")) {
+        printf("e passed");
+    }
+    item.Key = "b";
+    item.Value = 20;
+    tree.Insert(item);
+    if (tree.Search("b")) {
+        printf("b passed");
+    }
+    item.Key = "f";
+    item.Value = 45;
+    tree.Insert(item);
+    if (tree.Search("f")) {
+        printf("f passed");
+    }
+    item.Key = "g";
+    item.Value = 10;
+    tree.Insert(item);
+    if (tree.Search("g")) {
+        printf("g passed");
+    }
+    item.Key = "a";
+    item.Value = 60;
+    tree.Insert(item);
+    if (tree.Search("a")) {
+        printf("a passed");
+    }
+    item.Key = "h";
+    item.Value = 5;
+    tree.Insert(item);
+    if (tree.Search("h")) {
+        printf("h passed");
+    }
+    return 0;
+}

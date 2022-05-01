@@ -44,7 +44,7 @@ void BTree::Insert(BTreeItem& elem) {
 }
 
 void BTree::Erase(BTreeItem& elem) {
-
+    
 }
 
 #endif /* B_TREE_HPP*/
