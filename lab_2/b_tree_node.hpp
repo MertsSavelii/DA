@@ -23,18 +23,21 @@ public:
     bool NodeIsFull();
     uint8_t BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem);
     void SplitChild(uint8_t ChildIndex);
-
+    // InsertToNode
     void InsertToNode(BTreeItem& elem);
 
     // for EraseFormNode
-    bool NodeIsMin();
+    bool ElemInNode(uint8_t index, BTreeItem& elem);
     void EraseFromLeaf(uint8_t);
     void EraseFromNonLeaf(uint8_t);
     BTreeItem FindMaxInSubTree();
     BTreeItem FindMinInSubTree();
+    bool NodeIsMin();
     void Merge(uint8_t index);
-    bool ElemInNode(uint8_t index, BTreeItem& elem);
-
+    void FillChild(uint8_t index);
+    void BorrowFromLeftChild(uint8_t index);
+    void BorrowFromRightChild(uint8_t index);
+    // EraseFormNode
     void BTreeNode::EraseFromNode(BTreeItem& elem);
 };
 
@@ -150,15 +153,15 @@ void BTreeNode::EraseFromNode(BTreeItem& elem) {
         }
     } else {
         if (Child[index]->NodeIsMin()) {
-            FillNode(); 
+            FillChild(index); 
         } else {
             EraseFromChild();
         }
     }
 }
 
-bool BTreeNode::NodeIsMin() {
-    return (Data.size() < TREE_DEGREE) ? true : false;
+bool BTreeNode::ElemInNode(uint8_t index, BTreeItem& elem) {
+    return (index < Data.size() && Data[index].Key == elem.Key) ? true : false;
 }
 
 void BTreeNode::EraseFromLeaf(uint8_t index) {
@@ -196,6 +199,10 @@ BTreeItem BTreeNode::FindMinInSubTree() {
     }
 }
 
+bool BTreeNode::NodeIsMin() {
+    return (Data.size() < TREE_DEGREE) ? true : false;
+}
+
 void BTreeNode::Merge(uint8_t index) {
     Child[index]->Data.push_back(Data[index]);
     Child[index]->Data.insert(Child[index]->Data.end(), Child[index + 1]->Data.begin(), Child[index + 1]->Data.end());
@@ -207,8 +214,26 @@ void BTreeNode::Merge(uint8_t index) {
     Child.erase(Child.begin() + index + 1);
 }
 
-bool BTreeNode::ElemInNode(uint8_t index, BTreeItem& elem) {
-    return (index < Data.size() && Data[index].Key == elem.Key) ? true : false;
+void BTreeNode::FillChild(uint8_t index) {
+    if (index != 0 && !Child[index - 1]->NodeIsMin()) {
+        BorrowFromLeftChild(index);
+    } else if (index != Data.size() && !Child[index + 1]->NodeIsMin()) {
+        BorrowFromRightChild(index);
+    } else {
+        if (index != Data.size()) {
+            Merge(index);
+        } else {
+            Merge (index - 1);
+        }
+    }
+}
+
+void BTreeNode::BorrowFromLeftChild(uint8_t) {
+    
+}
+
+void BTreeNode::BorrowFromRightChild(uint8_t) {
+    
 }
 
 #endif /* B_TREE_NODE_HPP */
