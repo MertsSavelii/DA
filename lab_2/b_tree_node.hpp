@@ -22,9 +22,20 @@ public:
     bool NodeIsLeaf();
     bool NodeIsFull();
     uint8_t BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem);
-    void BalancingChild(uint8_t ChildIndex);
+    void SplitChild(uint8_t ChildIndex);
 
     void InsertToNode(BTreeItem& elem);
+
+    // for EraseFormNode
+    bool NodeIsMin();
+    void EraseFromLeaf(uint8_t);
+    void EraseFromNonLeaf(uint8_t);
+    BTreeItem FindMaxInSubTree();
+    BTreeItem FindMinInSubTree();
+    void Merge(uint8_t index);
+    bool ElemInNode(uint8_t index, BTreeItem& elem);
+
+    void BTreeNode::EraseFromNode(BTreeItem& elem);
 };
 
 BTreeNode::BTreeNode() {
@@ -59,6 +70,21 @@ bool BTreeNode::FindKey(std::string Key) {
 }
 
 // InsertToNode
+void BTreeNode::InsertToNode(BTreeItem& elem) {
+    uint8_t index = BinarySearch(Data, elem);
+
+    if (Child[index] == nullptr) {
+        Data.insert(Data.begin() + index, elem);
+        Child.insert(Child.begin() + index, nullptr);
+    } else {
+        if (Child[index]->NodeIsFull()) {
+            SplitChild(index);
+        } else {
+            Child[index]->InsertToNode(elem);
+        }
+    }
+}
+
 BTreeNode* BTreeNode::SplitNode() {
     BTreeNode* newNode = new BTreeNode;
     newNode->Data[0] = Data[TREE_DEGREE - 1];
@@ -103,7 +129,7 @@ uint8_t BTreeNode::BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem) {
     return right;
 }
 
-void BTreeNode::BalancingChild(uint8_t ChildIndex) {
+void BTreeNode::SplitChild(uint8_t ChildIndex) {
     BTreeNode* SplitNode = Child[ChildIndex]->SplitNode();
     Data.insert(Data.begin() + ChildIndex, SplitNode->Data[0]);
     Child[ChildIndex] = SplitNode->Child[1];
@@ -113,21 +139,76 @@ void BTreeNode::BalancingChild(uint8_t ChildIndex) {
     delete SplitNode;
 }
 
-void BTreeNode::InsertToNode(BTreeItem& elem) {
+// EraseFromNode
+void BTreeNode::EraseFromNode(BTreeItem& elem) {
     uint8_t index = BinarySearch(Data, elem);
-
-    if (Child[index] == nullptr) {
-        Data.insert(Data.begin() + index, elem);
-        Child.insert(Child.begin() + index, nullptr);
-    } else {
-        if (Child[index]->NodeIsFull()) {
-            BalancingChild(index);
+    if (ElemInNode(index, elem)) {
+        if (NodeIsLeaf()) {
+            EraseFromLeaf(index);
         } else {
-            Child[index]->InsertToNode(elem);
+            EraseFromNonLeaf(index);
+        }
+    } else {
+        if (Child[index]->NodeIsMin()) {
+            FillNode(); 
+        } else {
+            EraseFromChild();
         }
     }
 }
 
+bool BTreeNode::NodeIsMin() {
+    return (Data.size() < TREE_DEGREE) ? true : false;
+}
 
+void BTreeNode::EraseFromLeaf(uint8_t index) {
+    Data.erase(Data.begin() + index);
+}
+
+void BTreeNode::EraseFromNonLeaf(uint8_t index) {
+    if (!Child[index]->NodeIsMin()) {
+        BTreeItem leftMax = Child[index]->FindMaxInSubTree();
+        Data[index] = leftMax;
+        EraseFromNode(leftMax);
+    } else if (!Child[index+ 1]->NodeIsMin()) {
+        BTreeItem rightMin = Child[index + 1]->FindMinInSubTree();
+        Data[index] = rightMin;
+        EraseFromNode(rightMin);
+    } else {
+        Merge(index);
+        Child[index]->EraseFromNode(Data[index]);
+    }
+}
+
+BTreeItem BTreeNode::FindMaxInSubTree() {
+    if (Child[Data.size()] != nullptr) {
+        return Child[Data.size()]->FindMaxInSubTree();
+    } else {
+        return Data[Data.size() - 1];
+    }
+}
+
+BTreeItem BTreeNode::FindMinInSubTree() {
+    if (Child[0] != nullptr) {
+        return Child[0]->FindMaxInSubTree();
+    } else {
+        return Data[0];
+    }
+}
+
+void BTreeNode::Merge(uint8_t index) {
+    Child[index]->Data.push_back(Data[index]);
+    Child[index]->Data.insert(Child[index]->Data.end(), Child[index + 1]->Data.begin(), Child[index + 1]->Data.end());
+    if (!Child[index]->NodeIsLeaf()) {
+        Child[index]->Child.insert(Child[index]->Child.end(), Child[index + 1]->Child.begin(), Child[index + 1]->Child.end());
+    }
+    Data.erase(Data.begin() + index);
+    delete(Child[index + 1]);
+    Child.erase(Child.begin() + index + 1);
+}
+
+bool BTreeNode::ElemInNode(uint8_t index, BTreeItem& elem) {
+    return (index < Data.size() && Data[index].Key == elem.Key) ? true : false;
+}
 
 #endif /* B_TREE_NODE_HPP */

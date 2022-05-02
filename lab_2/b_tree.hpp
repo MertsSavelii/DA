@@ -44,7 +44,13 @@ void BTree::Insert(BTreeItem& elem) {
 }
 
 void BTree::Erase(BTreeItem& elem) {
-    
+    if (Root == nullptr) {
+        return;
+    } else {
+        Root->EraseFromNode(elem);
+        // мб корень пустым останется и надо его nullptr или пустым
+        // а ребёнок не пустым
+    }
 }
 
 #endif /* B_TREE_HPP*/
