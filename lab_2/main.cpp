@@ -55,7 +55,7 @@ int main() {
     item.Key = "h";
     item.Value = 5;
     tree.Insert(item);
-    //tree.Erase(item);
+    tree.Erase(item);
     if (tree.Search("h")) {
         printf("h passed\n");
     }

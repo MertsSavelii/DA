@@ -16,11 +16,9 @@ public:
 
     std::string Key;
     uint64_t Value;
-    friend bool operator<(const BTreeItem& A, const BTreeItem& B);
+    friend bool operator<(const BTreeItem& A, const BTreeItem& B) {
+        return (A.Key.compare(B.Key) == -1) ? true : false;
+    }
 };
-
-bool operator<(const BTreeItem& A, const BTreeItem& B) {
-    return (A.Key.compare(B.Key) == -1) ? true : false;
-}
 
 #endif /* B_TREE_ITEM_HPP*/

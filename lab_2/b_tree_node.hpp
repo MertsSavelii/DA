@@ -73,6 +73,21 @@ bool BTreeNode::FindKey(std::string Key) {
 }
 
 // InsertToNode
+void BTreeNode::InsertToNode(BTreeItem& elem) {
+    uint8_t index = BinarySearch(Data, elem);
+
+    if (Child[index] == nullptr) {
+        Data.insert(Data.begin() + index, elem);
+        Child.insert(Child.begin() + index, nullptr);
+    } else {
+        if (Child[index]->NodeIsFull()) {
+            SplitChild(index);
+        } 
+        index = BinarySearch(Data, elem);
+        Child[index]->InsertToNode(elem);
+    }
+}
+
 BTreeNode* BTreeNode::SplitNode() {
     BTreeNode* newNode = new BTreeNode;
     newNode->Data[0] = Data[TREE_DEGREE - 1];
@@ -125,21 +140,6 @@ void BTreeNode::SplitChild(uint8_t ChildIndex) {
     SplitNode->Child[0] = nullptr;
     SplitNode->Child[1] = nullptr;
     delete SplitNode;
-}
-
-void BTreeNode::InsertToNode(BTreeItem& elem) {
-    uint8_t index = BinarySearch(Data, elem);
-
-    if (Child[index] == nullptr) {
-        Data.insert(Data.begin() + index, elem);
-        Child.insert(Child.begin() + index, nullptr);
-    } else {
-        if (Child[index]->NodeIsFull()) {
-            SplitChild(index);
-        } 
-        index = BinarySearch(Data, elem);
-        Child[index]->InsertToNode(elem);
-    }
 }
 
 // EraseFromNode
