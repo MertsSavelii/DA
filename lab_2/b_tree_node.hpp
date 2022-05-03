@@ -64,9 +64,9 @@ bool BTreeNode::FindKey(std::string Key) {
     if (Key > Data[Data.size() - 1].Key && Child[Child.size() - 1] != nullptr) {
         return Child[Child.size() - 1]->FindKey(Key);
     }
-    for (int i = 0; i < Data.size() - 1; ++i) {
-        if (Key > Data[i].Key && Key < Data[i + 1].Key && Child[i + 1] != nullptr) {
-            return Child[i + 1]->FindKey(Key);
+    for (int i = 1; i < Data.size(); ++i) {
+        if (Key > Data[i - 1].Key && Key < Data[i].Key && Child[i] != nullptr) {
+            return Child[i]->FindKey(Key);
         }
     }
     return false;
@@ -252,11 +252,8 @@ void BTreeNode::EraseFromNode(BTreeItem& elem) {
         if (Child[index]->NodeIsMin()) {
             FillChild(index); 
         } else {
-            if(index > (Data.size() - 1)){
-                Child[index - 1]->EraseFromNode(elem);
-            } else {
-                Child[index]->EraseFromNode(elem);
-            }
+            index = BinarySearch(Data, elem);
+            Child[index]->EraseFromNode(elem);
         }
     }
 }
