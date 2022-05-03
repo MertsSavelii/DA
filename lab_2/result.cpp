@@ -32,7 +32,7 @@ public:
     BTreeNode();
     ~BTreeNode();
 
-    bool FindKey(std::string Key);
+    BTreeItem* FindKey(std::string Key);
 
     // for InsertToNode
     BTreeNode* SplitNode();
@@ -69,10 +69,10 @@ BTreeNode::~BTreeNode() {
 }
 
 // FindNode
-bool BTreeNode::FindKey(std::string Key) {
+BTreeItem* BTreeNode::FindKey(std::string Key) {
     for (int i = 0; i < Data.size(); ++i) {
         if (Key == Data[i].Key) {
-            return true;
+            return &Data[i];
         }
     }
     if (Key < Data[0].Key && Child[0] != nullptr) {
@@ -86,7 +86,7 @@ bool BTreeNode::FindKey(std::string Key) {
             return Child[i]->FindKey(Key);
         }
     }
-    return false;
+    return nullptr;
 }
 
 // InsertToNode
@@ -278,11 +278,11 @@ class BTree {
 public:
     BTree();
     ~BTree();
-    bool Search(std::string Key);
+    BTreeItem* Search(std::string Key);
     void Insert(BTreeItem& elem);
     void Erase(BTreeItem& elem);
-    void Save();
-    void Load();
+    void Save(std::ofstream ToWtiteFile);
+    void Load(std::ofstream ToLoadFile);
 
 private:
     BTreeNode* Root;
@@ -296,7 +296,10 @@ BTree::~BTree() {
     delete Root;
 }
 
-bool BTree::Search(std::string Key) {
+BTreeItem* BTree::Search(std::string Key) {
+    if (Root == nullptr) {
+        return nullptr;
+    }
     return Root->FindKey(Key);
 }
 
@@ -322,6 +325,10 @@ void BTree::Erase(BTreeItem& elem) {
     }
 }
 
+void BTree::Save(std::ofstream ToWtiteFile) {
+
+}
+
 int main() {
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
@@ -336,22 +343,42 @@ int main() {
             std::transform(KeyWord.begin(), KeyWord.end(), KeyWord.begin(), tolower);
             ToInsertItem.Key = KeyWord;
             ToInsertItem.Value = Value;
-            tree.Insert(ToInsertItem);
-            if (tree.Search(KeyWord)) {
-                std::cout << 
+            if (tree.Search(KeyWord) != nullptr) {
+                printf("Exist\n");
+            } else {
+                tree.Insert(ToInsertItem);
+                printf("OK\n");
             }
         } else if (Command == "-") {
             std::string KeyWord;
             std::cin >> KeyWord;
+            std::transform(KeyWord.begin(), KeyWord.end(), KeyWord.begin(), tolower);
+            BTreeItem ToEraseItem;
+            ToEraseItem.Key = KeyWord;
+            if (tree.Search(KeyWord) == nullptr){
+                printf("NoSuchWord\n");
+            } else {
+                tree.Erase(ToEraseItem);
+                printf("OK\n");
+            }
         } else if (Command == "!") {
-            std::cin >> Command;
+            std::string Path;
+            std::cin >> Command >> Path;
             if (Command == "Save") {
-
+                std::ofstream ToWriteFile(Path, std::ios::trunc | std::ios::binary);
+               // tree.Save(ToWriteFile);
+                printf("OK\n");
             } else if (Command == "Load") {
 
             }
         } else {
-
+            std::transform(Command.begin(), Command.end(), Command.begin(), tolower);
+            BTreeItem* FoundItem = tree.Search(Command);
+            if (FoundItem != nullptr) {
+                printf("OK: %llu\n", FoundItem->Value);
+            } else {
+                printf("NoSuchWord\n");
+            }
         }
     }
     return 0;
