@@ -3,35 +3,38 @@
 
 #include "b_tree_node.hpp"
 
-class BTree {
+class TBTree {
 public:
-    BTree();
-    ~BTree();
-    bool Search(std::string Key);
-    void Insert(BTreeItem& elem);
-    void Erase(BTreeItem& elem);
-    void Save();
-    void Load();
+    TBTree();
+    ~TBTree();
+    TBTreeItem* Search(std::string Key);
+    void Insert(TBTreeItem& elem);
+    void Erase(TBTreeItem& elem);
+    void Save(std::ofstream ToWtiteFile);
+    void Load(std::ofstream ToLoadFile);
 
 private:
-    BTreeNode* Root;
+    TBTreeNode* Root;
 };
 
-BTree::BTree() {
+TBTree::TBTree() {
     Root = nullptr;
 }
 
-BTree::~BTree() {
+TBTree::~TBTree() {
     delete Root;
 }
 
-bool BTree::Search(std::string Key) {
+TBTreeItem* TBTree::Search(std::string Key) {
+    if (Root == nullptr) {
+        return nullptr;
+    }
     return Root->FindKey(Key);
 }
 
-void BTree::Insert(BTreeItem& elem) {
+void TBTree::Insert(TBTreeItem& elem) {
     if(Root == nullptr) {
-        Root = new BTreeNode;
+        Root = new TBTreeNode;
         Root->Data[0] = elem;
         Root->Child[0] = nullptr;
         Root->Child[1] = nullptr;
@@ -43,12 +46,16 @@ void BTree::Insert(BTreeItem& elem) {
     }
 }
 
-void BTree::Erase(BTreeItem& elem) {
+void TBTree::Erase(TBTreeItem& elem) {
     if (Root == nullptr) {
         return;
     } else {
         Root->EraseFromNode(elem);
     }
+}
+
+void TBTree::Save(std::ofstream ToWtiteFile) {
+
 }
 
 #endif /* B_TREE_HPP*/
