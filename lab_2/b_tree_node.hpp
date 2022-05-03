@@ -38,7 +38,7 @@ public:
     void BorrowFromLeftChild(uint8_t index);
     void BorrowFromRightChild(uint8_t index);
     // EraseFormNode
-    void BTreeNode::EraseFromNode(BTreeItem& elem);
+    void EraseFromNode(BTreeItem& elem);
 };
 
 BTreeNode::BTreeNode() {
@@ -61,10 +61,10 @@ bool BTreeNode::FindKey(std::string Key) {
     if (Key < Data[0].Key && Child[0] != nullptr) {
         return Child[0]->FindKey(Key);
     }
-    if (Key < Data[Data.size() - 1].Key && Child[Child.size() - 1] != nullptr) {
+    if (Key > Data[Data.size() - 1].Key && Child[Child.size() - 1] != nullptr) {
         return Child[Child.size() - 1]->FindKey(Key);
     }
-    for (int i = 0; i < Data.size(); ++i) {
+    for (int i = 0; i < Data.size() - 1; ++i) {
         if (Key > Data[i].Key && Key < Data[i + 1].Key && Child[i + 1] != nullptr) {
             return Child[i + 1]->FindKey(Key);
         }
@@ -73,21 +73,6 @@ bool BTreeNode::FindKey(std::string Key) {
 }
 
 // InsertToNode
-void BTreeNode::InsertToNode(BTreeItem& elem) {
-    uint8_t index = BinarySearch(Data, elem);
-
-    if (Child[index] == nullptr) {
-        Data.insert(Data.begin() + index, elem);
-        Child.insert(Child.begin() + index, nullptr);
-    } else {
-        if (Child[index]->NodeIsFull()) {
-            SplitChild(index);
-        } else {
-            Child[index]->InsertToNode(elem);
-        }
-    }
-}
-
 BTreeNode* BTreeNode::SplitNode() {
     BTreeNode* newNode = new BTreeNode;
     newNode->Data[0] = Data[TREE_DEGREE - 1];
@@ -102,7 +87,7 @@ BTreeNode* BTreeNode::SplitNode() {
     for (uint8_t i = 0; i < 2 * TREE_DEGREE; ++i) {
         Child[i] = nullptr;
     }
-    delete this;// хз сработает ли, но должно, если что просто добавить входным аргументом ноду которую сплитуем
+    delete this;
     return newNode;
 }
 
@@ -118,11 +103,11 @@ bool BTreeNode::NodeIsFull() {
 }
 
 uint8_t BTreeNode::BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem) {
-    uint8_t left = -1;
+    int16_t left = -1;
     uint8_t right = Data.size();
     while (left + 1 < right) {
         uint8_t mid = (left + right) / 2;
-        if (Data[mid] < elem) {
+        if (Data[mid].Key < elem.Key) {
             left = mid;
         }
         else {
@@ -142,23 +127,22 @@ void BTreeNode::SplitChild(uint8_t ChildIndex) {
     delete SplitNode;
 }
 
-// EraseFromNode
-void BTreeNode::EraseFromNode(BTreeItem& elem) {
+void BTreeNode::InsertToNode(BTreeItem& elem) {
     uint8_t index = BinarySearch(Data, elem);
-    if (ElemInNode(index, elem)) {
-        if (NodeIsLeaf()) {
-            EraseFromLeaf(index);
-        } else {
-            EraseFromNonLeaf(index);
-        }
+
+    if (Child[index] == nullptr) {
+        Data.insert(Data.begin() + index, elem);
+        Child.insert(Child.begin() + index, nullptr);
     } else {
-        if (Child[index]->NodeIsMin()) {
-            FillChild(index); 
-        } else {
-            EraseFromChild();
-        }
+        if (Child[index]->NodeIsFull()) {
+            SplitChild(index);
+        } 
+        index = BinarySearch(Data, elem);
+        Child[index]->InsertToNode(elem);
     }
 }
+
+// EraseFromNode
 
 bool BTreeNode::ElemInNode(uint8_t index, BTreeItem& elem) {
     return (index < Data.size() && Data[index].Key == elem.Key) ? true : false;
@@ -228,12 +212,53 @@ void BTreeNode::FillChild(uint8_t index) {
     }
 }
 
-void BTreeNode::BorrowFromLeftChild(uint8_t) {
+void BTreeNode::BorrowFromLeftChild(uint8_t index) {
+    BTreeNode* curr = Child[index];
+    BTreeNode* leftBro = Child[index - 1];
+    curr->Data.insert(curr->Data.begin(), Data[index - 1]);
+    Data.erase(Data.begin() + index - 1);
+    Data.insert(Data.begin() + index - 1, leftBro->Data[leftBro->Data.size() - 1]);
+    leftBro->Data.erase(leftBro->Data.end() - 1);
     
+    if (!curr->NodeIsLeaf()) {
+        curr->Child.insert(curr->Child.begin(), leftBro->Child[leftBro->Child.size() - 1]);
+        leftBro->Child.erase(leftBro->Child.end() - 1);
+    }
 }
 
-void BTreeNode::BorrowFromRightChild(uint8_t) {
-    
+void BTreeNode::BorrowFromRightChild(uint8_t index) {
+    BTreeNode* curr = Child[index];
+    BTreeNode* rightBro = Child[index + 1];
+    curr->Data.insert(curr->Data.end(), Data[index]);
+    Data.erase(Data.begin() + index);
+    Data.insert(Data.begin() + index, rightBro->Data[0]);
+    rightBro->Data.erase(rightBro->Data.begin());
+
+    if (!curr->NodeIsLeaf()) {
+        curr->Child.insert(curr->Child.end(), rightBro->Child[0]);
+        rightBro->Child.erase(rightBro->Child.begin());
+    }
+}
+
+void BTreeNode::EraseFromNode(BTreeItem& elem) {
+    uint8_t index = BinarySearch(Data, elem);
+    if (ElemInNode(index, elem)) {
+        if (NodeIsLeaf()) {
+            EraseFromLeaf(index);
+        } else {
+            EraseFromNonLeaf(index);
+        }
+    } else {
+        if (Child[index]->NodeIsMin()) {
+            FillChild(index); 
+        } else {
+            if(index > (Data.size() - 1)){
+                Child[index - 1]->EraseFromNode(elem);
+            } else {
+                Child[index]->EraseFromNode(elem);
+            }
+        }
+    }
 }
 
 #endif /* B_TREE_NODE_HPP */

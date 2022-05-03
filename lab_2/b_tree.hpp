@@ -48,8 +48,6 @@ void BTree::Erase(BTreeItem& elem) {
         return;
     } else {
         Root->EraseFromNode(elem);
-        // мб корень пустым останется и надо его nullptr или пустым
-        // а ребёнок не пустым
     }
 }
 

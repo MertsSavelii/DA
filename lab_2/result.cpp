@@ -39,7 +39,7 @@ public:
     bool NodeIsLeaf();
     bool NodeIsFull();
     uint8_t BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem);
-    void BalancingChild(uint8_t ChildIndex);
+    void SplitChild(uint8_t ChildIndex);
 
     void InsertToNode(BTreeItem& elem);
 };
@@ -90,7 +90,7 @@ BTreeNode* BTreeNode::SplitNode() {
     for (uint8_t i = 0; i < 2 * TREE_DEGREE; ++i) {
         Child[i] = nullptr;
     }
-    delete this;// надо удалить в береве хотя хз
+    delete this;
     return newNode;
 }
 
@@ -120,7 +120,7 @@ uint8_t BTreeNode::BinarySearch(std::vector<BTreeItem>& Data, BTreeItem& elem) {
     return right;
 }
 
-void BTreeNode::BalancingChild(uint8_t ChildIndex) {
+void BTreeNode::SplitChild(uint8_t ChildIndex) {
     BTreeNode* SplitNode = Child[ChildIndex]->SplitNode();
     Data.insert(Data.begin() + ChildIndex, SplitNode->Data[0]);
     Child[ChildIndex] = SplitNode->Child[1];
@@ -138,10 +138,10 @@ void BTreeNode::InsertToNode(BTreeItem& elem) {
         Child.insert(Child.begin() + index, nullptr);
     } else {
         if (Child[index]->NodeIsFull()) {
-            BalancingChild(index);
-        } else {
-            Child[index]->InsertToNode(elem);
-        }
+            SplitChild(index);
+        } 
+        index = BinarySearch(Data, elem);
+        Child[index]->InsertToNode(elem);
     }
 }
 
