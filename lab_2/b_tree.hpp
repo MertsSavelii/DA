@@ -49,8 +49,14 @@ void TBTree::Insert(TBTreeItem& elem) {
 void TBTree::Erase(TBTreeItem& elem) {
     if (Root == nullptr) {
         return;
-    } else {
-        Root->EraseFromNode(elem);
+    }
+    Root->EraseFromNode(elem);
+    if (Root->Data.size() == 0) {
+        if (Root->NodeIsLeaf()) {
+            Root = nullptr;
+        } else {
+            //Root = Root->Child[0];
+        }
     }
 }
 

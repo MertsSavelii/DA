@@ -76,14 +76,17 @@ TBTreeItem* TBTreeNode::FindKey(std::string Key) {
 void TBTreeNode::InsertToNode(TBTreeItem& elem) {
     uint8_t index = BinarySearch(Data, elem);
 
-    if (Child[index] == nullptr) {
+    if (NodeIsLeaf()) {
         Data.insert(Data.begin() + index, elem);
         Child.insert(Child.begin() + index, nullptr);
     } else {
+        if (Child[index] == nullptr) {
+            Child[index] = new TBTreeNode;
+        }
         if (Child[index]->NodeIsFull()) {
             SplitChild(index);
+            index = BinarySearch(Data, elem);
         } 
-        index = BinarySearch(Data, elem);
         Child[index]->InsertToNode(elem);
     }
 }
@@ -151,11 +154,11 @@ void TBTreeNode::EraseFromNode(TBTreeItem& elem) {
         } else {
             EraseFromNonLeaf(index);
         }
-    } else {
+    } else if (Child[index] != nullptr) {
         if (Child[index]->NodeIsMin()) {
             FillChild(index); 
-        } else {
             index = BinarySearch(Data, elem);
+        } else {
             Child[index]->EraseFromNode(elem);
         }
     }
@@ -167,17 +170,18 @@ bool TBTreeNode::ElemInNode(uint8_t index, TBTreeItem& elem) {
 
 void TBTreeNode::EraseFromLeaf(uint8_t index) {
     Data.erase(Data.begin() + index);
+    Child.erase(Child.begin() + index);
 }
 
 void TBTreeNode::EraseFromNonLeaf(uint8_t index) {
     if (!Child[index]->NodeIsMin()) {
         TBTreeItem leftMax = Child[index]->FindMaxInSubTree();
-        Data[index] = leftMax;
         EraseFromNode(leftMax);
+        Data[index] = leftMax;
     } else if (!Child[index+ 1]->NodeIsMin()) {
         TBTreeItem rightMin = Child[index + 1]->FindMinInSubTree();
-        Data[index] = rightMin;
         EraseFromNode(rightMin);
+        Data[index] = rightMin;
     } else {
         Merge(index);
         Child[index]->EraseFromNode(Data[index]);
@@ -211,6 +215,9 @@ void TBTreeNode::Merge(uint8_t index) {
         Child[index]->Child.insert(Child[index]->Child.end(), Child[index + 1]->Child.begin(), Child[index + 1]->Child.end());
     }
     Data.erase(Data.begin() + index);
+    for (int i = 0; i < Child[index + 1]->Child.size(); ++i) {
+        Child[index + 1]->Child[i] = nullptr;
+    }
     delete(Child[index + 1]);
     Child.erase(Child.begin() + index + 1);
 }

@@ -9,40 +9,47 @@ int main() {
     std::cin.tie(nullptr);
     std::string Command;
     TBTree tree;
-    while (std::cin >> Command) {
+    std::ifstream in("test.txt");
+    std::ofstream out("result.txt");
+    while (in >> Command) {
         if (Command == "+") {
             std::string KeyWord;
             uint64_t Value;
             TBTreeItem ToInsertItem;
-            std::cin >> KeyWord >> Value;
+            in >> KeyWord >> Value;
             std::transform(KeyWord.begin(), KeyWord.end(), KeyWord.begin(), tolower);
             ToInsertItem.Key = KeyWord;
             ToInsertItem.Value = Value;
             if (tree.Search(KeyWord) != nullptr) {
-                printf("Exist\n");
+                out << "Exist\n";
+                //printf("Exist\n");
             } else {
                 tree.Insert(ToInsertItem);
-                printf("OK\n");
+                out << "OK\n";
+                //printf("OK\n");
             }
         } else if (Command == "-") {
             std::string KeyWord;
-            std::cin >> KeyWord;
+            in >> KeyWord;
             std::transform(KeyWord.begin(), KeyWord.end(), KeyWord.begin(), tolower);
             TBTreeItem ToEraseItem;
             ToEraseItem.Key = KeyWord;
             if (tree.Search(KeyWord) == nullptr){
-                printf("NoSuchWord\n");
+                out << "NoSuchWord\n";
+                //printf("NoSuchWord\n");
             } else {
                 tree.Erase(ToEraseItem);
-                printf("OK\n");
+                out << "OK\n";
+                //printf("OK\n");
             }
         } else if (Command == "!") {
             std::string Path;
-            std::cin >> Command >> Path;
+            in >> Command >> Path;
             if (Command == "Save") {
                 std::ofstream ToWriteFile(Path, std::ios::trunc | std::ios::binary);
-               // tree.Save(ToWriteFile);
-                printf("OK\n");
+                //tree.Save(ToWriteFile);
+                out << "OK\n";
+                //printf("OK\n");
             } else if (Command == "Load") {
 
             }
@@ -50,9 +57,11 @@ int main() {
             std::transform(Command.begin(), Command.end(), Command.begin(), tolower);
             TBTreeItem* FoundItem = tree.Search(Command);
             if (FoundItem != nullptr) {
-                printf("OK: %llu\n", FoundItem->Value);
+                out << "OK: " << FoundItem->Value << "\n";
+                //printf("OK: %llu\n", FoundItem->Value);
             } else {
-                printf("NoSuchWord\n");
+                out << "NoSuchWord\n";
+                //printf("NoSuchWord\n");
             }
         }
     }
