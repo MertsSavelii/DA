@@ -93,7 +93,7 @@ public:
     
     // For InsertToNode
     TBTreeNode* TBTreeNode::SplitNode() {
-        TBTreeNode* midNode = new TBTreeNode(*data[TREE_DEGREE]);
+        TBTreeNode* midNode = new TBTreeNode(*data[TREE_DEGREE - 1]);
         midNode->child[0] = new TBTreeNode;
         midNode->child[0]->data.resize(TREE_DEGREE - 1, nullptr);
         midNode->child[0]->child.resize(TREE_DEGREE, nullptr);
@@ -102,7 +102,7 @@ public:
         midNode->child[1]->child.resize(TREE_DEGREE, nullptr);
         for (uint16_t i = 0; i < TREE_DEGREE - 1; ++i) {
             midNode->child[0]->data[i] = data[i];
-            midNode->child[1]->data[i] = data[TREE_DEGREE + i]; 
+            midNode->child[1]->data[i] = data[TREE_DEGREE + i];
         }
         for (uint16_t i = 0; i < TREE_DEGREE; ++i) {
             midNode->child[0]->child[i] = child[i];
@@ -110,6 +110,9 @@ public:
         }
         for (uint16_t i = 0; i < 2 * TREE_DEGREE; ++i) {
             child[i] = nullptr;
+        }
+        for (uint16_t i = 0; i < 2 * TREE_DEGREE - 1; ++i) {
+            data[i] = nullptr;
         }
         delete this;
         return midNode;
@@ -120,6 +123,7 @@ public:
         data.insert(data.begin() + childIndex, splitNode->data[0]);
         child[childIndex] = splitNode->child[0];
         child.insert(child.begin() + childIndex + 1, splitNode->child[1]);
+        splitNode->data[0] = nullptr;
         splitNode->child[0] = nullptr;
         splitNode->child[1] = nullptr;
         delete splitNode;

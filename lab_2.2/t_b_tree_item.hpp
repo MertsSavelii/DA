@@ -28,10 +28,10 @@ public:
     }
 
     friend bool operator<(const TBTreeItem& a, const TBTreeItem& b) {
-        return (a.key.compare(b.key) == -1) ? true : false;
+        return (a.key.compare(b.key) < 0) ? true : false;
     }
     friend bool operator>(const TBTreeItem& a, const TBTreeItem& b) {
-        return (a.key.compare(b.key) == 1) ? true : false;
+        return (a.key.compare(b.key) > 0) ? true : false;
     }
     friend bool operator==(const TBTreeItem& a, const TBTreeItem& b) {
         return (a.key.compare(b.key) == 0) ? true : false;
