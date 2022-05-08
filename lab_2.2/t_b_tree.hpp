@@ -42,17 +42,18 @@ void TBTree::Insert(const TBTreeItem& elemForInsert) {
 }
 
 void TBTree::Erase(const TBTreeItem& elemForErase) {
-    // if (root == nullptr) {
-    //     return;
-    // }
-    // root->EraseFromNode(const TBTreeItem& elemForErase);
-    // if (root->data.size() == 0) {
-    //     if (root->NodeIsLeaf()) {
-    //         root = nullptr;
-    //     } else {
-    //         root = root->child[0];
-    //     }
-    // }
+    if (root == nullptr) {
+        return;
+    }
+    // нужна проверка на полность корня если он не лист
+    if (root->NodeIsMin() && !root->NodeIsLeaf()) {
+
+    }
+    root->EraseFromNode(elemForErase);
+    if (root->NodeIsEmpty()) {
+        delete root;
+        root = nullptr;
+    }
 }
 
 void TBTree::Save(const std::ofstream ToWtiteFile) {

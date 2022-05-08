@@ -1,8 +1,41 @@
-#ifndef T_B_TREE_NODE_HPP
-#define T_B_TREE_NODE_HPP
+#include <cstdint>
+#include <string>
+
+class TBTreeItem
+{
+private:
+    std::string key;
+    uint64_t value;
+public:
+    TBTreeItem(const TBTreeItem& inItem) {
+        key = inItem.key;
+        value = inItem.value;
+    }
+    TBTreeItem(const std::string inKey, const uint64_t& inValue) {
+        key = inKey;
+        value = inValue;
+    }
+    ~TBTreeItem() = default;
+    
+    std::string Key() {
+        return key;
+    }
+    uint64_t Value() {
+        return value;
+    }
+
+    friend bool operator<(const TBTreeItem& a, const TBTreeItem& b) {
+        return (a.key.compare(b.key) < 0) ? true : false;
+    }
+    friend bool operator>(const TBTreeItem& a, const TBTreeItem& b) {
+        return (a.key.compare(b.key) > 0) ? true : false;
+    }
+    friend bool operator==(const TBTreeItem& a, const TBTreeItem& b) {
+        return (a.key.compare(b.key) == 0) ? true : false;
+    }
+};
 
 #include <vector>
-#include "t_b_tree_item.hpp"
 
 const uint8_t TREE_DEGREE = 55;
 
@@ -287,4 +320,120 @@ void TBTreeNode::EraseFromNode(const TBTreeItem& elemForErase) {
     return;
 }
 
-#endif /*T_B_TREE_NODE_HPP*/
+#include <fstream>
+
+class TBTree
+{
+private:
+    TBTreeNode* root;
+public:
+    TBTree() {
+        root = nullptr;
+    }
+    ~TBTree() {
+        delete root;
+    }
+
+    TBTreeItem* Search(const std::string& keyForSearch);
+    void Insert(const TBTreeItem& elemForInsert);
+    void Erase(const TBTreeItem& elemForErase);
+    void Save(const std::ofstream ToWtiteFile);
+    void Load(const std::ofstream ToLoadFile);
+};
+
+TBTreeItem* TBTree::Search(const std::string& keyForSearch) {
+    if (root == nullptr) {
+        return nullptr;
+    }
+    return root->SearchInNode(keyForSearch);
+}
+
+void TBTree::Insert(const TBTreeItem& elemForInsert) {
+    if (root == nullptr) {
+        root = new TBTreeNode(elemForInsert);
+        return;
+    }
+    if (root->NodeIsFull()) {
+        root = root->SplitNode();
+    }
+    root->InsertToNode(elemForInsert);
+}
+
+void TBTree::Erase(const TBTreeItem& elemForErase) {
+    if (root == nullptr) {
+        return;
+    }
+    // нужна проверка на полность корня если он не лист
+    if (root->NodeIsMin() && !root->NodeIsLeaf()) {
+
+    }
+    root->EraseFromNode(elemForErase);
+    if (root->NodeIsEmpty()) {
+        delete root;
+        root = nullptr;
+    }
+}
+
+void TBTree::Save(const std::ofstream ToWtiteFile) {
+
+}
+void TBTree::Load(const std::ofstream ToLoadFile) {
+
+}
+
+#include <iostream>
+#include <utility>
+#include <fstream>
+#include <algorithm>
+
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::string Command;
+    TBTree tree;
+    while (std::cin >> Command) {
+        if (Command == "+") {
+            std::string KeyWord;
+            uint64_t Value;
+            std::cin >> KeyWord >> Value;
+            std::transform(KeyWord.begin(), KeyWord.end(), KeyWord.begin(), tolower);
+            TBTreeItem ToInsertItem(KeyWord, Value);
+            if (tree.Search(KeyWord) != nullptr) {
+                printf("Exist\n");
+            } else {
+                tree.Insert(ToInsertItem);
+                printf("OK\n");
+            }
+        } else if (Command == "-") {
+            std::string KeyWord;
+            std::cin >> KeyWord;
+            std::transform(KeyWord.begin(), KeyWord.end(), KeyWord.begin(), tolower);
+            TBTreeItem ToEraseItem(KeyWord, 0);
+            if (tree.Search(KeyWord) == nullptr){
+                printf("NoSuchWord\n");
+            } else {
+                tree.Erase(ToEraseItem);
+                printf("OK\n");
+            }
+        } else if (Command == "!") {
+            std::string Path;
+            std::cin >> Command >> Path;
+            if (Command == "Save") {
+                std::ofstream ToWriteFile(Path, std::ios::trunc | std::ios::binary);
+                printf("OK\n");
+            } else if (Command == "Load") {
+
+            }
+        } else {
+            std::transform(Command.begin(), Command.end(), Command.begin(), tolower);
+            TBTreeItem* FoundItem = tree.Search(Command);
+            if (FoundItem != nullptr) {
+                printf("OK: %llu\n", FoundItem->Value());
+            } else {
+                printf("NoSuchWord\n");
+            }
+        }
+    }
+    return 0;
+}
