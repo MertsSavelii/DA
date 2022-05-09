@@ -147,6 +147,8 @@ public:
         } else {
             if (child[findIndex]->NodeIsFull()) {
                 SplitChild(findIndex);
+                // если индекс <= середины то он будет равен 0
+                // если индекс > середины то он будет равен 1
                 findIndex = BinarySearch(data, itemForInsert);
             }
             child[findIndex]->InsertToNode(itemForInsert);
