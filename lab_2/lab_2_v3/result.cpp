@@ -135,8 +135,9 @@ private:
         child.erase(child.begin() + findIndex + 1);
     }
     void EraseFromLeaf(const uint8_t& findIndex) {
-        // delete(data[findIndex]);
-        // delete(child[findIndex]);
+        data[findIndex] = nullptr;
+        delete(data[findIndex]);
+        delete(child[findIndex]);
         data.erase(data.begin() + findIndex);
         child.erase(child.begin() + findIndex);
     }
@@ -349,45 +350,44 @@ int main() {
     std::string keyWord;
     uint64_t value;
     TBTree tree;
-    std::ifstream in("test.txt");
-    std::ofstream out("result.txt");
-    while (in >> command) {
+    while (std::cin >> command) {
         if (command == "+") {
-            in >> keyWord >> value;
+            std::cin >> keyWord >> value;
             std::transform(keyWord.begin(), keyWord.end(), keyWord.begin(), tolower);
-            TBTreeItem toInsertItem(keyWord, value);
-            if (tree.Search(toInsertItem) != nullptr) {
-                out << "Exist" << std::endl;
+            TBTreeItem ToInsertItem(keyWord, value);
+            if (tree.Search(ToInsertItem) != nullptr) {
+                printf("Exist\n");
             } else {
-                tree.Insert(toInsertItem);
-                out << "OK" << std::endl;
+                tree.Insert(ToInsertItem);
+                printf("OK\n");
             }
         } else if (command == "-") {
-            in >> keyWord;
+            std::cin >> keyWord;
             std::transform(keyWord.begin(), keyWord.end(), keyWord.begin(), tolower);
-            TBTreeItem toEraseItem(keyWord, 0);
-            if (tree.Search(toEraseItem) == nullptr){
-                out << "NoSuchWord" << std::endl;
+            TBTreeItem ToEraseItem(keyWord, 0);
+            if (tree.Search(ToEraseItem) == nullptr){
+                printf("NoSuchWord\n");
             } else {
-                tree.Erase(toEraseItem);
-                out << "OK" << std::endl;
+                tree.Erase(ToEraseItem);
+                printf("OK\n");
             }
         } else if (command == "!") {
-            // std::string path;
-            // in >> command >> path;
+            // std::string Path;
+            // std::cin >> command >> Path;
             // if (command == "Save") {
-            //     std::ofstream ToWriteFile(path, std::ios::trunc | std::ios::binary);
-            //     out << "OK\n";
+            //     std::ofstream ToWriteFile(Path, std::ios::trunc | std::ios::binary);
+            //     //tree.Save(ToWriteFile);
+            //     printf("OK\n");
             // } else if (command == "Load") {
             // }
         } else {
             std::transform(command.begin(), command.end(), command.begin(), tolower);
-            TBTreeItem toSearchItem(command, 0);
-            TBTreeItem* foundItem = tree.Search(toSearchItem);
-            if (foundItem != nullptr) {
-                out << "OK: " << foundItem->Value() << std::endl;
+            TBTreeItem ToSearchItem(command, 0);
+            TBTreeItem* FoundItem = tree.Search(ToSearchItem);
+            if (FoundItem != nullptr) {
+                printf("OK: %llu\n", FoundItem->Value());
             } else {
-                out << "NoSuchWord" << std::endl;
+                printf("NoSuchWord\n");
             }
         }
     }
