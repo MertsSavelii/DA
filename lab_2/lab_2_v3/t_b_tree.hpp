@@ -49,8 +49,10 @@ public:
             root = root->FillRoot();
         }
     }
-    void Save(const std::ofstream ToWtiteFile);
-    void Load(const std::ofstream ToLoadFile);
+    void Save(const std::ofstream& ToWtiteFile) {
+
+    }
+    void Load(const std::ofstream& ToLoadFile);
 };
 
 #endif /*T_B_TREE_HPP*/
