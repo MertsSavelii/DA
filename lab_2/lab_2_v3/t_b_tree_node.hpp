@@ -94,15 +94,9 @@ private:
         data[findIndex] = nullptr;
         delete data[findIndex];
         data.erase(data.begin() + findIndex);
-        // for (uint16_t i = 0; i < child[findIndex + 1]->data.size(); ++i) {
-        //     child[findIndex + 1]->data[i] = nullptr;
-        // }
         for (uint16_t i = 0; i < TREE_DEGREE - 1; ++i) {
             child[findIndex + 1]->data[i] = nullptr;
         }
-        // for (uint16_t i = 0; i < child[findIndex + 1]->child.size(); ++i) {
-        //     child[findIndex + 1]->child[i] = nullptr;
-        // }
         for (uint16_t i = 0; i < TREE_DEGREE; ++i) {
             child[findIndex + 1]->child[i] = nullptr;
         }
