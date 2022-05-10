@@ -104,8 +104,8 @@ private:
         child.erase(child.begin() + findIndex + 1);
     }
     void EraseFromLeaf(const uint8_t& findIndex) {
-        delete(data[findIndex]);
-        delete(child[findIndex]);
+        // delete(data[findIndex]);
+        // delete(child[findIndex]);
         data.erase(data.begin() + findIndex);
         child.erase(child.begin() + findIndex);
     }
