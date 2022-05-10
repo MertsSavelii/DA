@@ -18,6 +18,13 @@ public:
     ~TBTree() {
         delete root;
     }
+    void DeleteTree() {
+        if (root == nullptr) {
+            return;
+        }
+        root->DeleteNode();
+        root = nullptr;
+    }
     TBTreeItem* Search(const TBTreeItem& itemForSearch) {
         if (root == nullptr) {
             return nullptr;
@@ -49,10 +56,18 @@ public:
             root = root->FillRoot();
         }
     }
-    void Save(const std::ofstream& ToWtiteFile) {
-
+    void Save(std::ofstream& toWtiteFile) {
+        if (root == nullptr) {
+            toWtiteFile.write(reinterpret_cast<const char *>(0), sizeof(int));
+            return;
+        }
+        root->SaveNode(toWtiteFile);
     }
-    void Load(const std::ofstream& ToLoadFile);
+    void Load(std::ifstream& ToLoadFile) {
+        DeleteTree();
+        root = new TBTreeNode;
+        root->LoadNode(ToLoadFile);
+    }
 };
 
 #endif /*T_B_TREE_HPP*/

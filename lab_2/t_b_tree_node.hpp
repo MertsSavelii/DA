@@ -3,6 +3,7 @@
 
 #include "t_b_tree_item.hpp"
 #include <vector>
+#include <iostream>
 
 const uint8_t TREE_DEGREE = 2;
 
@@ -238,6 +239,32 @@ public:
         }
         child[findIndex]->EraseFromNode(itemForErase);
     }
+    void SaveNode (std::ofstream& toWtiteFile) {
+        toWtiteFile.write(reinterpret_cast<const char *>(data.size()), sizeof(size_t));
+        for (uint16_t i = 0; i < data.size(); ++i) {
+            toWtiteFile.write(reinterpret_cast<const char *>(data[i]->Key().size()), sizeof(size_t));
+            toWtiteFile.write(data[i]->Key().c_str(), data[i]->Key().size());
+        }
+        if (NodeIsLeaf()) {
+            toWtiteFile.write(reinterpret_cast<const char *>(0), sizeof(size_t));
+            return;
+        }
+        toWtiteFile.write(reinterpret_cast<const char *>(child.size()), sizeof(size_t));
+        for (uint16_t i = 0; i < child.size(); ++i) {
+            child[i]->SaveNode(toWtiteFile);
+        }
+    }
+    void LoadNode (std::ifstream& ToLoadFile) {
+        size_t dataSize = 0;
+        ToLoadFile.read(reinterpret_cast<char *>(dataSize), sizeof(size_t));
+        data.resize(dataSize);
+        for (uint16_t i = 0; i < dataSize; ++i) {
+            size_t keySize = 0;
+            ToLoadFile.read(reinterpret_cast<char *>(keySize), sizeof(size_t));
+            data[i]->Key().resize(keySize);
+            ToLoadFile.read(data[i]->Key().data(), keySize);
+        }
+    }
 
     bool NodeIsFull() {
         return (data.size() == 2 * TREE_DEGREE - 1) ? true : false;
@@ -253,6 +280,21 @@ public:
             return child[0];
         }
         return nullptr;
+    }
+    void DeleteNode() {
+        for (uint16_t i = 0; i < data.size(); ++i) {
+            data[i] = nullptr;
+            delete(data[i]);
+            data.erase(data.begin() + i);
+        }
+        if (NodeIsLeaf()) {
+            delete this;
+            return;
+        }
+        for (uint16_t i = 0; i < child.size(); ++i) {
+            child[i]->DeleteNode();
+        }
+        delete this;
     }
 };
 

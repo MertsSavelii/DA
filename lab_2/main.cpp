@@ -1,5 +1,4 @@
 #include "t_b_tree.hpp"
-#include <iostream>
 #include <utility>
 #include <fstream>
 #include <algorithm>
@@ -36,10 +35,15 @@ int main() {
         } else if (command == "!") {
             std::cin >> command >> path;
             if (command == "Save") {
-                std::ofstream ToWriteFile(path, std::ios::trunc | std::ios::binary);
-                tree.Save(ToWriteFile);
+                std::ofstream toWriteFile(path, std::ios::trunc | std::ios::binary);
+                tree.Save(toWriteFile);
+                toWriteFile.close();
                 printf("OK\n");
             } else if (command == "Load") {
+                std::ifstream toReadFile(path, std::ios::binary);
+                tree.Load(toReadFile);
+                toReadFile.close();
+                printf("OK\n");
             }
         } else {
             std::transform(command.begin(), command.end(), command.begin(), tolower);
@@ -89,7 +93,7 @@ int main() {
 //             // std::string path;
 //             // in >> command >> path;
 //             // if (command == "Save") {
-//             //     std::ofstream ToWriteFile(path, std::ios::trunc | std::ios::binary);
+//             //     std::ofstream toWriteFile(path, std::ios::trunc | std::ios::binary);
 //             //     out << "OK\n";
 //             // } else if (command == "Load") {
 //             // }
