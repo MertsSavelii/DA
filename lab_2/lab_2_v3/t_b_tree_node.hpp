@@ -87,19 +87,102 @@ private:
     bool NodeIsMin() {
         return (data.size() == TREE_DEGREE - 1) ? true : false;
     }
-    void Merge(const uint8_t& findIndex);
-        // for EraseFromLeaf
-        
-        //
-    void EraseFromLeaf(const uint8_t& findIndex);
+    void Merge(const uint8_t& findIndex) {
+        child[findIndex]->data.push_back(data[findIndex]);
+        child[findIndex]->data.insert(child[findIndex]->data.end(), child[findIndex + 1]->data.begin(), child[findIndex + 1]->data.end());
+        child[findIndex]->child.insert(child[findIndex]->child.end(), child[findIndex + 1]->child.begin(), child[findIndex + 1]->child.end());
+        data[findIndex] = nullptr;
+        delete data[findIndex];
+        data.erase(data.begin() + findIndex);
+        // for (uint16_t i = 0; i < child[findIndex + 1]->data.size(); ++i) {
+        //     child[findIndex + 1]->data[i] = nullptr;
+        // }
+        for (uint16_t i = 0; i < TREE_DEGREE - 1; ++i) {
+            child[findIndex + 1]->data[i] = nullptr;
+        }
+        // for (uint16_t i = 0; i < child[findIndex + 1]->child.size(); ++i) {
+        //     child[findIndex + 1]->child[i] = nullptr;
+        // }
+        for (uint16_t i = 0; i < TREE_DEGREE; ++i) {
+            child[findIndex + 1]->child[i] = nullptr;
+        }
+        delete child[findIndex + 1];
+        child.erase(child.begin() + findIndex + 1);
+    }
+    void EraseFromLeaf(const uint8_t& findIndex) {
+        delete(data[findIndex]);
+        delete(child[findIndex]);
+        data.erase(data.begin() + findIndex);
+        child.erase(child.begin() + findIndex);
+    }
         // for EraseFromNonLeaf
-
+        TBTreeItem* FindMaxInSubTree() {
+            if (child[child.size() - 1] != nullptr) {
+                return child[child.size() - 1]->FindMaxInSubTree();
+            }
+            return data[data.size() - 1];
+        }
+        TBTreeItem* FindMinInSubTree() {
+            if (child[0] != nullptr) {
+                return child[0]->FindMinInSubTree();
+            }
+            return data[0];
+        }
         //
-    void EraseFromNonLeaf(const uint8_t& findIndex);
-        // for EraseFromNonLeaf
-
+    void EraseFromNonLeaf(const uint8_t& findIndex) {
+        if (!child[findIndex]->NodeIsMin()) {
+            data[findIndex] = child[findIndex]->FindMaxInSubTree();
+            child[findIndex]->EraseFromNode(*data[findIndex]);
+            return;
+        }
+        if (!child[findIndex + 1]->NodeIsMin()) {
+            data[findIndex] = child[findIndex + 1]->FindMinInSubTree();
+            child[findIndex + 1]->EraseFromNode(*data[findIndex]);
+            return;
+        }
+        TBTreeItem elemForErase = *data[findIndex];
+        Merge(findIndex);
+        child[findIndex]->EraseFromNode(elemForErase);
+        return;
+    }
+        // for FillChild
+            void BorrowFromLeftChild(const uint8_t& findIndex) {
+                TBTreeNode* fillChild = child[findIndex];
+                TBTreeNode* leftChild = child[findIndex - 1];
+                fillChild->data.insert(fillChild->data.begin(), data[findIndex - 1]);
+                data[findIndex - 1] = leftChild->data[leftChild->data.size() - 1];
+                leftChild->data.erase(leftChild->data.end() - 1); 
+                fillChild->child.insert(fillChild->child.begin(), leftChild->child[leftChild->child.size() - 1]);
+                leftChild->child.erase(leftChild->child.end() - 1);   
+            }
+            void BorrowFromRightChild(const uint8_t& findIndex) {
+                TBTreeNode* fillChild = child[findIndex];
+                TBTreeNode* rightChild = child[findIndex + 1];
+                fillChild->data.push_back(data[findIndex]);
+                data[findIndex] = rightChild->data[0];
+                rightChild->data.erase(rightChild->data.begin());
+                fillChild->child.push_back(rightChild->child[0]);
+                rightChild->child.erase(rightChild->child.begin());
+            }
         //
-    void FillChild(const uint8_t& findIndex);
+    void FillChild(const uint8_t& findIndex) {
+        if (findIndex != 0 && !child[findIndex - 1]->NodeIsMin()) {
+            BorrowFromLeftChild(findIndex);
+            return;
+        } 
+        if (findIndex != data.size() && !child[findIndex + 1]->NodeIsMin()) {
+            BorrowFromRightChild(findIndex);
+            return;
+        }
+        if (findIndex != 0) {
+            Merge(findIndex - 1);
+            return;
+        }
+        if (findIndex != data.size()) {
+            Merge(findIndex);
+            return;
+        }
+    }
 public:
     TBTreeNode() {
         data.resize(1, nullptr);

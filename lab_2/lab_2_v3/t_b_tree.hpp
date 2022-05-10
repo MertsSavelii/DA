@@ -33,6 +33,9 @@ public:
             root = root->SplitRoot();
         }
         root->InsertToNode(itemForInsert);
+        if (root->NodeIsFull()) {
+            root = root->SplitRoot();
+        }
     }
     void Erase(const TBTreeItem& itemForErase) {
         if (root == nullptr) {
@@ -42,6 +45,9 @@ public:
             root = root->FillRoot();
         }
         root->EraseFromNode(itemForErase);
+        if (root->NodeIsEmpty()) {
+            root = root->FillRoot();
+        }
     }
     void Save(const std::ofstream ToWtiteFile);
     void Load(const std::ofstream ToLoadFile);
