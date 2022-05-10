@@ -37,7 +37,7 @@ public:
 #include <fstream>
 #include <iostream>
 
-const uint8_t TREE_DEGREE = 2;
+const uint8_t TREE_DEGREE = 10;
 
 class TBTreeNode
 {
@@ -413,7 +413,8 @@ public:
     }
     void Save(std::ofstream& toWtiteFile) {
         if (root == nullptr) {
-            toWtiteFile.write(reinterpret_cast<const char *>(0), sizeof(int));
+            size_t dataSize = 0;
+            toWtiteFile.write(reinterpret_cast<const char *>(&dataSize), sizeof(size_t));
             return;
         }
         root->SaveNode(toWtiteFile);
