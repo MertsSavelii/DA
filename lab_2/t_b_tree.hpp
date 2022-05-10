@@ -67,6 +67,10 @@ public:
         DeleteTree();
         root = new TBTreeNode;
         root->LoadNode(ToLoadFile);
+        if (root->NodeIsEmpty()) {
+            delete root;
+            root = nullptr;
+        }
     }
 };
 

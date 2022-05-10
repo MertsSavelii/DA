@@ -3,6 +3,7 @@
 
 #include "t_b_tree_item.hpp"
 #include <vector>
+#include <fstream>
 #include <iostream>
 
 const uint8_t TREE_DEGREE = 2;
@@ -240,29 +241,55 @@ public:
         child[findIndex]->EraseFromNode(itemForErase);
     }
     void SaveNode (std::ofstream& toWtiteFile) {
-        toWtiteFile.write(reinterpret_cast<const char *>(data.size()), sizeof(size_t));
+        size_t dataSize = data.size();
+        toWtiteFile.write(reinterpret_cast<const char *>(&dataSize), sizeof(size_t));
         for (uint16_t i = 0; i < data.size(); ++i) {
-            toWtiteFile.write(reinterpret_cast<const char *>(data[i]->Key().size()), sizeof(size_t));
-            toWtiteFile.write(data[i]->Key().c_str(), data[i]->Key().size());
+            size_t keySize = data[i]->Key().size();
+            toWtiteFile.write(reinterpret_cast<const char *>(&keySize), sizeof(size_t));
+            toWtiteFile.write(data[i]->Key().c_str(), keySize);
+            uint64_t outValue = data[i]->Value();
+            toWtiteFile.write(reinterpret_cast<const char *>(&outValue), sizeof(uint64_t));
         }
+        size_t childSize = 0;
         if (NodeIsLeaf()) {
-            toWtiteFile.write(reinterpret_cast<const char *>(0), sizeof(size_t));
+            toWtiteFile.write(reinterpret_cast<const char *>(&childSize), sizeof(size_t));
+            toWtiteFile.flush();
             return;
         }
-        toWtiteFile.write(reinterpret_cast<const char *>(child.size()), sizeof(size_t));
+        childSize = child.size();
+        toWtiteFile.write(reinterpret_cast<const char *>(&childSize), sizeof(size_t));
+        toWtiteFile.flush();
         for (uint16_t i = 0; i < child.size(); ++i) {
             child[i]->SaveNode(toWtiteFile);
         }
     }
     void LoadNode (std::ifstream& ToLoadFile) {
         size_t dataSize = 0;
-        ToLoadFile.read(reinterpret_cast<char *>(dataSize), sizeof(size_t));
-        data.resize(dataSize);
+        ToLoadFile.read(reinterpret_cast<char *>(&dataSize), sizeof(size_t));
+        data.resize(dataSize, nullptr);
+        if (dataSize == 0) {
+            return;
+        }
         for (uint16_t i = 0; i < dataSize; ++i) {
             size_t keySize = 0;
-            ToLoadFile.read(reinterpret_cast<char *>(keySize), sizeof(size_t));
-            data[i]->Key().resize(keySize);
-            ToLoadFile.read(data[i]->Key().data(), keySize);
+            std::string inKey;
+            uint64_t inValue = 0;
+            ToLoadFile.read(reinterpret_cast<char *>(&keySize), sizeof(size_t));
+            inKey.resize(keySize);
+            ToLoadFile.read(inKey.data(), keySize);
+            ToLoadFile.read(reinterpret_cast<char *>(&inValue), sizeof(uint64_t));
+            data[i] = new TBTreeItem(inKey, inValue);
+        }
+        size_t childSize = 0;
+        ToLoadFile.read(reinterpret_cast<char *>(&childSize), sizeof(size_t));
+        if (childSize == 0) {
+            child.resize(dataSize + 1, nullptr);
+            return;
+        }
+        child.resize(childSize, nullptr);
+        for (uint16_t i = 0; i < childSize; ++i) {
+            child[i] = new TBTreeNode;
+            child[i]->LoadNode(ToLoadFile);
         }
     }
 
@@ -293,6 +320,7 @@ public:
         }
         for (uint16_t i = 0; i < child.size(); ++i) {
             child[i]->DeleteNode();
+            child[i] = nullptr;
         }
         delete this;
     }

@@ -34,6 +34,8 @@ public:
 };
 
 #include <vector>
+#include <fstream>
+#include <iostream>
 
 const uint8_t TREE_DEGREE = 2;
 
@@ -269,6 +271,58 @@ public:
         }
         child[findIndex]->EraseFromNode(itemForErase);
     }
+    void SaveNode (std::ofstream& toWtiteFile) {
+        size_t dataSize = data.size();
+        toWtiteFile.write(reinterpret_cast<const char *>(&dataSize), sizeof(size_t));
+        for (uint16_t i = 0; i < data.size(); ++i) {
+            size_t keySize = data[i]->Key().size();
+            toWtiteFile.write(reinterpret_cast<const char *>(&keySize), sizeof(size_t));
+            toWtiteFile.write(data[i]->Key().c_str(), keySize);
+            uint64_t outValue = data[i]->Value();
+            toWtiteFile.write(reinterpret_cast<const char *>(&outValue), sizeof(uint64_t));
+        }
+        size_t childSize = 0;
+        if (NodeIsLeaf()) {
+            toWtiteFile.write(reinterpret_cast<const char *>(&childSize), sizeof(size_t));
+            toWtiteFile.flush();
+            return;
+        }
+        childSize = child.size();
+        toWtiteFile.write(reinterpret_cast<const char *>(&childSize), sizeof(size_t));
+        toWtiteFile.flush();
+        for (uint16_t i = 0; i < child.size(); ++i) {
+            child[i]->SaveNode(toWtiteFile);
+        }
+    }
+    void LoadNode (std::ifstream& ToLoadFile) {
+        size_t dataSize = 0;
+        ToLoadFile.read(reinterpret_cast<char *>(&dataSize), sizeof(size_t));
+        data.resize(dataSize, nullptr);
+        if (dataSize == 0) {
+            return;
+        }
+        for (uint16_t i = 0; i < dataSize; ++i) {
+            size_t keySize = 0;
+            std::string inKey;
+            uint64_t inValue = 0;
+            ToLoadFile.read(reinterpret_cast<char *>(&keySize), sizeof(size_t));
+            inKey.resize(keySize);
+            ToLoadFile.read(inKey.data(), keySize);
+            ToLoadFile.read(reinterpret_cast<char *>(&inValue), sizeof(uint64_t));
+            data[i] = new TBTreeItem(inKey, inValue);
+        }
+        size_t childSize = 0;
+        ToLoadFile.read(reinterpret_cast<char *>(&childSize), sizeof(size_t));
+        if (childSize == 0) {
+            child.resize(dataSize + 1, nullptr);
+            return;
+        }
+        child.resize(childSize, nullptr);
+        for (uint16_t i = 0; i < childSize; ++i) {
+            child[i] = new TBTreeNode;
+            child[i]->LoadNode(ToLoadFile);
+        }
+    }
 
     bool NodeIsFull() {
         return (data.size() == 2 * TREE_DEGREE - 1) ? true : false;
@@ -284,6 +338,22 @@ public:
             return child[0];
         }
         return nullptr;
+    }
+    void DeleteNode() {
+        for (uint16_t i = 0; i < data.size(); ++i) {
+            data[i] = nullptr;
+            delete(data[i]);
+            data.erase(data.begin() + i);
+        }
+        if (NodeIsLeaf()) {
+            delete this;
+            return;
+        }
+        for (uint16_t i = 0; i < child.size(); ++i) {
+            child[i]->DeleteNode();
+            child[i] = nullptr;
+        }
+        delete this;
     }
 };
 
@@ -302,6 +372,13 @@ public:
     }
     ~TBTree() {
         delete root;
+    }
+    void DeleteTree() {
+        if (root == nullptr) {
+            return;
+        }
+        root->DeleteNode();
+        root = nullptr;
     }
     TBTreeItem* Search(const TBTreeItem& itemForSearch) {
         if (root == nullptr) {
@@ -334,8 +411,22 @@ public:
             root = root->FillRoot();
         }
     }
-    void Save(const std::ofstream ToWtiteFile);
-    void Load(const std::ofstream ToLoadFile);
+    void Save(std::ofstream& toWtiteFile) {
+        if (root == nullptr) {
+            toWtiteFile.write(reinterpret_cast<const char *>(0), sizeof(int));
+            return;
+        }
+        root->SaveNode(toWtiteFile);
+    }
+    void Load(std::ifstream& ToLoadFile) {
+        DeleteTree();
+        root = new TBTreeNode;
+        root->LoadNode(ToLoadFile);
+        if (root->NodeIsEmpty()) {
+            delete root;
+            root = nullptr;
+        }
+    }
 };
 
 #include <iostream>
@@ -348,6 +439,7 @@ int main() {
     std::cin.tie(nullptr);
     std::string command;
     std::string keyWord;
+    std::string path;
     uint64_t value;
     TBTree tree;
     while (std::cin >> command) {
@@ -372,14 +464,20 @@ int main() {
                 printf("OK\n");
             }
         } else if (command == "!") {
-            // std::string Path;
-            // std::cin >> command >> Path;
-            // if (command == "Save") {
-            //     std::ofstream ToWriteFile(Path, std::ios::trunc | std::ios::binary);
-            //     //tree.Save(ToWriteFile);
-            //     printf("OK\n");
-            // } else if (command == "Load") {
-            // }
+            std::cin >> command;
+            if (command == "Save") {
+                std::cin >> path;
+                std::ofstream toWriteFile(path, std::ios::trunc | std::ios::binary);
+                tree.Save(toWriteFile);
+                toWriteFile.close();
+                printf("OK\n");
+            } else if (command == "Load") {
+                std::cin >> path;
+                std::ifstream toReadFile(path, std::ios::binary);
+                tree.Load(toReadFile);
+                toReadFile.close();
+                printf("OK\n");
+            }
         } else {
             std::transform(command.begin(), command.end(), command.begin(), tolower);
             TBTreeItem ToSearchItem(command, 0);
