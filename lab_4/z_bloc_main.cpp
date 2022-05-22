@@ -63,8 +63,7 @@ std::vector<intChar> TextRead(std::istream &in) {
     intChar inChar;
     char c;
     int newLineCunt = 1;
-    do
-    {
+    do{
         int wordCount = 1; 
         do {
             while(!isdigit(c = std::cin.peek()) && c != '\n' && c != EOF) {
