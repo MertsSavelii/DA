@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <ctype.h>
+#include <sstream>
 
 class intChar
 {
@@ -23,9 +24,9 @@ public:
     }
 };
 
-std::vector<int> zFunc (std::vector<intChar> inString) {
+void zFunc(const std::vector<intChar>& inString, std::vector<int>& zF) {
     int strLength = inString.size();
-	std::vector<int> zF (strLength, 0);
+	zF.resize(strLength, 0);
 	for (int i = 1, l = 0, r = 0; i < strLength - 1; ++i) {
 		zF[i] = std::max(0, std::min (r - i, zF[i - l]));
 		while (i + zF[i] < strLength && inString[zF[i]] == inString[i + zF[i]])
@@ -35,73 +36,58 @@ std::vector<int> zFunc (std::vector<intChar> inString) {
             r = i + zF[i];
         }
 	}
-	return zF;
 }
 
-std::vector<intChar> PatternRead(std::istream &in) {
-    std::vector<intChar> pattern;
-    int wordCount = 1;
+void PatternRead(std::istream &in, std::vector<intChar>& pattern) {
     intChar inChar;
-    char c;
-    do {
-        if (std::cin >> inChar) {
-            inChar.numInString = wordCount;
-            inChar.numOfString = 1;
-            pattern.push_back(inChar);
-            wordCount++;
-        }
-        while(!isdigit(c = std::cin.peek()) && c != '\n' && c != EOF) {
-            std::cin.get();
-        }
-    } while (c != '\n' && c != EOF);
-    std::cin.get();
-    return pattern;
+    std::string inString;
+    getline(in, inString);
+    std::stringstream inStream(inString);
+    int wordNumber = 1;
+    while (inStream >> inChar)
+    {
+        inChar.numInString = wordNumber;
+        inChar.numOfString = 1;
+        pattern.push_back(inChar);
+        wordNumber++;
+    }
 }
 
-std::vector<intChar> TextRead(std::istream &in) {
+void TextRead(std::istream &in, std::vector<intChar>& inText) {
+    intChar inChar;
+    std::string inString;
+    int lineNumber = 1;
+    while (!in.eof()) {
+        getline(in, inString);
+        std::stringstream inStream(inString);
+        int wordNumber = 1;
+        while (inStream >> inChar) {
+            inChar.numInString = wordNumber;
+            inChar.numOfString = lineNumber;
+            inText.push_back(inChar);
+            wordNumber++;
+        }
+        lineNumber++;
+    };
+}
+
+void substringInTextSearch (std::istream &in, std::ostream &out) {
     std::vector<intChar> inText;
-    intChar inChar;
-    char c;
-    int newLineCunt = 1;
-    do{
-        int wordCount = 1; 
-        do {
-            while(!isdigit(c = std::cin.peek()) && c != '\n' && c != EOF) {
-                std::cin.get();
-            }
-            if (isdigit(c)) {
-                std::cin >> inChar;
-                inChar.numInString = wordCount;
-                inChar.numOfString = newLineCunt;
-                inText.push_back(inChar);
-                wordCount++;
-            }
-        } while (c != '\n' && c != EOF);
-        if (c == '\n') {
-            std::cin.get();
-        }
-        newLineCunt++;
-    } while (c = std::cin.peek() != EOF);
-    return inText;
-}
+    PatternRead(in, inText);
+    uint16_t patternSize = inText.size();
+    TextRead(in, inText);
 
-void substringInTextSearch () {
-    std::vector<intChar> pattern, inText, stringForZFunc;
-    pattern = PatternRead(std::cin);
-    inText = TextRead(std::cin);
-    stringForZFunc.insert(stringForZFunc.begin(), pattern.begin(), pattern.end());
-    stringForZFunc.insert(stringForZFunc.end(), inText.begin(), inText.end());
+    std::vector<int> zFuncRes;
+    zFunc(inText, zFuncRes);
 
-    std::vector<int> zFuncRes = zFunc(stringForZFunc);
-
-    for (uint16_t i = pattern.size(); i < stringForZFunc.size(); ++i) {
-        if (zFuncRes[i] >= pattern.size()) {
-            printf("%d, %d\n", stringForZFunc[i].numOfString, stringForZFunc[i].numInString);
+    for (uint16_t i = patternSize; i < inText.size(); ++i) {
+        if (zFuncRes[i] >= patternSize) {
+            out << inText[i].numOfString << ", " << inText[i].numInString << '\n';
         }
     }
 }
 
 int main () {
-    substringInTextSearch();
+    substringInTextSearch(std::cin, std::cout);
     return 0;
 }
