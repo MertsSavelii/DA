@@ -1,16 +1,17 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cstdint>
 #include <sstream>
 
 using namespace std;
 
+const long long WALL = -1;
+
 struct intChar
 {
-    int64_t value;
-    uint32_t numInString;
-    uint32_t numOfString;
+    long long value;
+    unsigned int numInString;
+    unsigned int numOfString;
 };
 
 vector<int> zFunc(const vector<intChar>& inText) {
@@ -31,35 +32,45 @@ vector<int> zFunc(const vector<intChar>& inText) {
     return zf;
 }
 
-int main () {
-    ios_base::sync_with_stdio(false);
-    cin.tie(nullptr); 
-    cout.tie(nullptr);
-
-    vector<intChar> inText;
-    int64_t inWord;
-
+void ReadPattern(vector<intChar>& inText) {
+    long long inWord;
     string inString;
     getline(cin, inString);
     stringstream inStringStream(inString);
     while (inStringStream >> inWord) {
         inText.push_back({inWord});
     }
+}
 
-    unsigned int patternSize = inText.size();
-    inText.push_back({-1});
-
-    uint32_t lineNumber = 1;
+void ReadText(vector<intChar>& inText) {
+    long long inWord;
+    string inString;
+    unsigned int lineNumber = 1;
     while (!cin.eof()) {
         getline(cin, inString);
         stringstream inStringStream(inString);
-        uint32_t wordNumber = 1;
+        unsigned int wordNumber = 1;
         while (inStringStream >> inWord) {
             inText.push_back({inWord, wordNumber, lineNumber});
             wordNumber++;
         }
         lineNumber++;
     };
+}
+
+int main () {
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr); 
+    cout.tie(nullptr);
+
+    vector<intChar> inText;
+
+    ReadPattern(inText);
+
+    unsigned int patternSize = inText.size();
+    inText.push_back({WALL});
+
+    ReadText(inText);
 
     vector<int> zFuncRes = zFunc(inText);
     
