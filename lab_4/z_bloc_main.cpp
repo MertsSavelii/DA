@@ -8,26 +8,19 @@ using namespace std;
 
 struct intChar
 {
-    uint32_t value;
+    int64_t value;
     uint16_t numInString;
     uint16_t numOfString;
 };
 
-bool operator<(const intChar& a, const intChar& b) {
-    return (a.value < b.value) ? true : false;
-}
-bool operator==(const intChar& a, const intChar& b) {
-    return (a.value == b.value) ? true : false;
-}
-
 void zFunc(const vector<intChar>& inString, vector<int>& zFRes) {
-    int strLength = inString.size();
+    uint16_t strLength = inString.size();
 	zFRes.resize(strLength, 0);
     int leftBound = 0;
     int rightBound = 0;
-	for (int i = 1; i < strLength - 1; ++i) {
+	for (int i = 1; i < strLength; ++i) {
 		zFRes[i] = max(0, min (rightBound - i, zFRes[i - leftBound]));
-		while (i + zFRes[i] < strLength && inString[zFRes[i]] == inString[i + zFRes[i]]) {
+		while (i + zFRes[i] < strLength && inString[zFRes[i]].value == inString[i + zFRes[i]].value) {
         	++zFRes[i];    
         }
 		if (i + zFRes[i] > rightBound) {
@@ -37,7 +30,7 @@ void zFunc(const vector<intChar>& inString, vector<int>& zFRes) {
 	}
 }
 
-void PatternRead(istream &in, vector<intChar>& pattern) {
+inline void PatternRead(istream &in, vector<intChar>& pattern) {
     string inString;
     getline(in, inString);
     stringstream inStream(inString);
@@ -48,7 +41,7 @@ void PatternRead(istream &in, vector<intChar>& pattern) {
     }
 }
 
-void TextRead(istream &in, vector<intChar>& inText) {
+inline void TextRead(istream &in, vector<intChar>& inText) {
     string inString;
     uint32_t inChar;
     uint16_t lineNumber = 1;
@@ -68,13 +61,14 @@ void substringInTextSearch (istream &in, ostream &out) {
     vector<intChar> inText;
     PatternRead(in, inText);
     uint16_t patternSize = inText.size();
+    inText.push_back({-1, 0, 0});
     TextRead(in, inText);
 
     vector<int> zFuncRes;
     zFunc(inText, zFuncRes);
 
     for (uint16_t i = patternSize; i < inText.size(); ++i) {
-        if (zFuncRes[i] >= patternSize) { // вот тут ошибка должно быть ==
+        if (zFuncRes[i] == patternSize) {
             out << inText[i].numOfString << ", " << inText[i].numInString << '\n';
         }
     }
