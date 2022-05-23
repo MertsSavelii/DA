@@ -30,23 +30,25 @@ void zFunc(const vector<intChar>& inString, vector<int>& zFRes) {
 	}
 }
 
-inline void PatternRead(istream &in, vector<intChar>& pattern) {
+int main () {
+    vector<intChar> inText;
+
     string inString;
-    getline(in, inString);
-    stringstream inStream(inString);
     uint32_t inChar = 1;
+
+    getline(cin, inString);
+    stringstream inStream(inString);
     while (inStream >> inChar)
     {
-        pattern.push_back({inChar, 0, 0});
+        inText.push_back({inChar, 0, 0});
     }
-}
 
-inline void TextRead(istream &in, vector<intChar>& inText) {
-    string inString;
-    uint32_t inChar;
+    uint16_t patternSize = inText.size();
+    inText.push_back({-1, 0, 0});
+
     uint16_t lineNumber = 1;
-    while (!in.eof()) {
-        getline(in, inString);
+    while (!cin.eof()) {
+        getline(cin, inString);
         stringstream inStream(inString);
         uint16_t wordNumber = 1;
         while (inStream >> inChar) {
@@ -55,26 +57,14 @@ inline void TextRead(istream &in, vector<intChar>& inText) {
         }
         lineNumber++;
     };
-}
-
-void substringInTextSearch (istream &in, ostream &out) {
-    vector<intChar> inText;
-    PatternRead(in, inText);
-    uint16_t patternSize = inText.size();
-    inText.push_back({-1, 0, 0});
-    TextRead(in, inText);
 
     vector<int> zFuncRes;
     zFunc(inText, zFuncRes);
 
     for (uint16_t i = patternSize; i < inText.size(); ++i) {
         if (zFuncRes[i] == patternSize) {
-            out << inText[i].numOfString << ", " << inText[i].numInString << '\n';
+            cout << inText[i].numOfString << ", " << inText[i].numInString << '\n';
         }
     }
-}
-
-int main () {
-    substringInTextSearch(cin, cout);
     return 0;
 }
