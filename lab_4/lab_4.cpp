@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <chrono>
 
 using namespace std;
 
@@ -71,13 +72,16 @@ int main () {
     inText.push_back({WALL});
 
     ReadText(inText);
-
+    chrono::system_clock::time_point start = chrono::system_clock::now();
     vector<int> zFuncRes = zFunc(inText);
     
+
     for (unsigned int i = patternSize; i < inText.size(); ++i) {
         if (zFuncRes[i] == patternSize) {
-            cout << inText[i].numOfString << ", " << inText[i].numInString << '\n';
+            //cout << inText[i].numOfString << ", " << inText[i].numInString << '\n';
         }
     }
+    chrono::system_clock::time_point end = chrono::system_clock::now();
+    cout << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "\n";
     return 0;
 }
